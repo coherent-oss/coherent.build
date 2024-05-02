@@ -1,6 +1,7 @@
 __requires__ = [
     "wheel",
     "pip-run",
+    "jaraco.vcs",
 ]
 
 import importlib.metadata
@@ -13,6 +14,7 @@ import tarfile
 import time
 import types
 
+from jaraco import vcs
 from wheel.wheelfile import WheelFile
 from pip_run import scripts
 
@@ -25,9 +27,12 @@ def name_from_path():
     return pathlib.Path(".").absolute().name
 
 
-def read_version():
-    # stubbed
-    return "1.0.0"
+def version_from_vcs():
+    return vcs.repo().get_current_version()
+
+
+def version_from_sdist():
+    return importlib.metadata.PathDistribution(pathlib.Path()).metadata.get("Version")
 
 
 class Filter:
@@ -67,7 +72,7 @@ def normalize(name):
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     name = name_from_sdist() or name_from_path()
     root = name.replace(".", "/")
-    version = read_version()
+    version = version_from_sdist() or version_from_vcs()
     filename = (
         pathlib.Path(wheel_directory) / f"{normalize(name)}-{version}-py3-none-any.whl"
     )
@@ -118,7 +123,7 @@ def make_sdist_metadata(name, version) -> tarfile.TarInfo:
 
 def build_sdist(sdist_directory, config_settings=None):
     name = name_from_path()
-    version = read_version()
+    version = version_from_vcs()
     filename = pathlib.Path(sdist_directory) / f"{normalize(name)}-{version}.tar.gz"
     with tarfile.open(filename, "w:gz") as tf:
         tf.add(pathlib.Path(), filter=SDist(f"{normalize(name)}-{version}"))
