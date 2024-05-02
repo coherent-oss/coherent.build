@@ -7,7 +7,8 @@ import re
 import tarfile
 import time
 import types
-import zipfile
+
+from wheel.wheelfile import WheelFile
 
 
 def name_from_sdist():
@@ -64,7 +65,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     filename = (
         pathlib.Path(wheel_directory) / f"{normalize(name)}-{version}-py3-none-any.whl"
     )
-    with zipfile.ZipFile(filename, "w") as zf:
+    with WheelFile(filename, "w") as zf:
         for info in wheel_walk(Wheel(root)):
             zf.write(info.path, arcname=info.name)
         for md_name, contents in make_wheel_metadata(name, version):
@@ -83,12 +84,10 @@ def make_wheel_metadata(name, version):
 def wheel_walk(filter_: Wheel):
     for root, dirs, files in os.walk("."):
         zi = ZipInfo(path=root)
-        filtered = filter_(zi)
-        if not filtered:
+        if not filter_(zi):
             dirs[:] = []
             continue
 
-        yield filtered
         children = (ZipInfo(path=os.path.join(root, file)) for file in files)
         yield from filter(None, map(filter_, children))
 
