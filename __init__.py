@@ -92,7 +92,7 @@ def read_deps():
 
 
 def make_wheel_metadata(name, version):
-    metadata = f"Name: {name}\nVersion: {version}\n"
+    metadata = f"Metadata-Version: 2.1\nName: {name}\nVersion: {version}\n"
     for dep in read_deps():
         metadata += f"Requires-Dist: {dep}\n"
     dist_info = f"{normalize(name)}-{version}.dist-info"
@@ -114,7 +114,7 @@ def wheel_walk(filter_: Wheel):
 
 def make_sdist_metadata(name, version) -> tarfile.TarInfo:
     info = tarfile.TarInfo(f"{normalize(name)}-{version}/PKG-INFO")
-    metadata = f"Name: {name}\nVersion: {version}\n"
+    metadata = f"Metadata-Version: 1.2\nName: {name}\nVersion: {version}\n"
     file = io.BytesIO(metadata.encode("utf-8"))
     info.size = len(file.getbuffer())
     info.mtime = time.time()
