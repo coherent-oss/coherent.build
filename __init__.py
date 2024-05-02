@@ -52,11 +52,16 @@ class ZipInfo(types.SimpleNamespace):
         super().__init__(path=path, name=zip_name)
 
 
+def normalize(name):
+    # todo: do proper normalization
+    return name.replace(".", "_")
+
+
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     name = name_from_sdist() or name_from_path()
     root = name.replace(".", "/")
     version = read_version()
-    filename = pathlib.Path(wheel_directory) / f"{name}-{version}.whl"
+    filename = pathlib.Path(wheel_directory) / f"{normalize(name)}-{version}.whl"
     with zipfile.ZipFile(filename, "w") as zf:
         for info in wheel_walk(Wheel(root)):
             zf.write(info.path, arcname=info.name)
@@ -66,7 +71,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
 
 def make_wheel_metadata(name, version):
     metadata = f"Name: {name}\nVersion: {version}\n"
-    return f"{name}-{version}.dist-info/METADATA", metadata
+    return f"{normalize(name)}-{version}.dist-info/METADATA", metadata
 
 
 def wheel_walk(filter_: Wheel):
@@ -83,7 +88,7 @@ def wheel_walk(filter_: Wheel):
 
 
 def make_sdist_metadata(name, version) -> tarfile.TarInfo:
-    info = tarfile.TarInfo(f"{name}-{version}/PKG-INFO")
+    info = tarfile.TarInfo(f"{normalize(name)}-{version}/PKG-INFO")
     metadata = f"Name: {name}\nVersion: {version}\n"
     file = io.BytesIO(metadata.encode("utf-8"))
     info.size = len(file.getbuffer())
@@ -94,8 +99,8 @@ def make_sdist_metadata(name, version) -> tarfile.TarInfo:
 def build_sdist(sdist_directory, config_settings=None):
     name = name_from_path()
     version = read_version()
-    filename = pathlib.Path(sdist_directory) / f"{name}-{version}.tar.gz"
+    filename = pathlib.Path(sdist_directory) / f"{normalize(name)}-{version}.tar.gz"
     with tarfile.open(filename, "w:gz") as tf:
-        tf.add(pathlib.Path(), filter=SDist(f"{name}-{version}"))
+        tf.add(pathlib.Path(), filter=SDist(f"{normalize(name)}-{version}"))
         tf.addfile(*make_sdist_metadata(name, version))
     return str(filename)
