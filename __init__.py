@@ -39,7 +39,7 @@ class Filter:
 
 
 class SDist(Filter):
-    ignored = [r"\.git", "dist"]
+    ignored = [r"\.git", "dist", r".*\b__pycache__$"]
 
 
 class Wheel(Filter):
