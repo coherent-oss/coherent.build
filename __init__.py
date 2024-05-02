@@ -2,6 +2,7 @@ __requires__ = [
     "wheel",
     "pip-run",
     "jaraco.vcs",
+    "build",
 ]
 
 import importlib.metadata
