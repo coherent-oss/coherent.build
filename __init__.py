@@ -61,7 +61,9 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     name = name_from_sdist() or name_from_path()
     root = name.replace(".", "/")
     version = read_version()
-    filename = pathlib.Path(wheel_directory) / f"{normalize(name)}-{version}.whl"
+    filename = (
+        pathlib.Path(wheel_directory) / f"{normalize(name)}-{version}-py3-none-any.whl"
+    )
     with zipfile.ZipFile(filename, "w") as zf:
         for info in wheel_walk(Wheel(root)):
             zf.write(info.path, arcname=info.name)
