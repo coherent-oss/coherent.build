@@ -1,3 +1,8 @@
+__requires__ = [
+    "wheel",
+    "pip-run",
+]
+
 import importlib.metadata
 import io
 import os
@@ -9,6 +14,7 @@ import time
 import types
 
 from wheel.wheelfile import WheelFile
+from pip_run import scripts
 
 
 def name_from_sdist():
@@ -73,8 +79,17 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     return str(filename)
 
 
+def read_deps():
+    """
+    Read deps from ``__init__.py``.
+    """
+    return scripts.DepsReader.search(["__init__.py"])
+
+
 def make_wheel_metadata(name, version):
     metadata = f"Name: {name}\nVersion: {version}\n"
+    for dep in read_deps():
+        metadata += f"Requires-Dist: {dep}\n"
     dist_info = f"{normalize(name)}-{version}.dist-info"
     yield f"{dist_info}/METADATA", metadata
     wheel_md = "Wheel-Version: 1.0\nGenerator: coherent.build\nRoot-Is-Purelib: true\nTag: py3-none-any\n"
