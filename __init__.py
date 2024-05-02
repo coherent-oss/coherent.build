@@ -3,14 +3,18 @@ __requires__ = [
     "pip-run",
     "setuptools_scm",
     "build",
+    "git-fame",
+    "jaraco.context",
 ]
 
 import importlib.metadata
 import io
+import json
 import os
 import pathlib
 import posixpath
 import re
+import subprocess
 import tarfile
 import time
 import types
@@ -18,6 +22,7 @@ import types
 import setuptools_scm
 from wheel.wheelfile import WheelFile
 from pip_run import scripts
+from jaraco.context import suppress
 
 
 def name_from_sdist():
@@ -34,6 +39,10 @@ def version_from_vcs():
 
 def version_from_sdist():
     return importlib.metadata.PathDistribution(pathlib.Path()).metadata.get("Version")
+
+
+def author_from_sdist():
+    return importlib.metadata.PathDistribution(pathlib.Path()).metadata.get("Author")
 
 
 class Filter:
@@ -93,7 +102,13 @@ def read_deps():
 
 
 def make_wheel_metadata(name, version):
-    metadata = f"Metadata-Version: 2.1\nName: {name}\nVersion: {version}\n"
+    metadata = {
+        "Metadata-Version": "2.1",
+        "Name": name,
+        "Version": version,
+        "Author-Email": author_from_sdist(),
+    }
+    metadata = render(metadata)
     for dep in read_deps():
         metadata += f"Requires-Dist: {dep}\n"
     dist_info = f"{normalize(name)}-{version}.dist-info"
@@ -113,15 +128,61 @@ def wheel_walk(filter_: Wheel):
         yield from filter(None, map(filter_, children))
 
 
+def _to_mapping(fame):
+    return (dict(zip(fame["columns"], row)) for row in fame["data"])
+
+
+class Contributor(types.SimpleNamespace):
+    @property
+    def combined_detail(self):
+        return f'"{self.name}" <{self.email}>'
+
+
+@suppress(Exception)
+def author_from_vcs():
+    # run git-fame twice to get both name and email
+    cmd = ["git-fame", "--format", "json"]
+    names_data = json.loads(subprocess.check_output(cmd, text=True, encoding="utf-8"))
+    emails_data = json.loads(
+        subprocess.check_output(
+            cmd + ["--show-email"],
+            text=True,
+            encoding="utf-8",
+        )
+    )
+    names_data["columns"][0] = "name"
+    emails_data["columns"][0] = "email"
+    emails_contribs = _to_mapping(emails_data)
+    names_contribs = _to_mapping(names_data)
+
+    contribs = (
+        Contributor(**val)
+        for val in (
+            {**name_contrib, **email_contrib}
+            for name_contrib, email_contrib in zip(names_contribs, emails_contribs)
+        )
+    )
+    return next(contribs).combined_detail
+
+
+def render(metadata):
+    return (
+        "\n".join(
+            f"{key}: {value}" for key, value in metadata.items() if value is not None
+        )
+        + "\n"
+    )
+
+
 def make_sdist_metadata(name, version) -> tarfile.TarInfo:
     info = tarfile.TarInfo(f"{normalize(name)}-{version}/PKG-INFO")
     metadata = {
         "Metadata-Version": "1.2",
         "Name": name,
         "Version": version,
+        "Author-Email": author_from_vcs(),
     }
-    metadata_text = "\n".join(f"{key}: {value}" for key, value in metadata.items())
-    file = io.BytesIO(metadata_text.encode("utf-8"))
+    file = io.BytesIO(render(metadata).encode("utf-8"))
     info.size = len(file.getbuffer())
     info.mtime = time.time()
     return info, file
