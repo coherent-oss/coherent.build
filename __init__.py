@@ -1,7 +1,7 @@
 __requires__ = [
     "wheel",
     "pip-run",
-    "jaraco.vcs",
+    "setuptools_scm",
     "build",
 ]
 
@@ -15,7 +15,7 @@ import tarfile
 import time
 import types
 
-from jaraco import vcs
+import setuptools_scm
 from wheel.wheelfile import WheelFile
 from pip_run import scripts
 
@@ -29,7 +29,7 @@ def name_from_path():
 
 
 def version_from_vcs():
-    return vcs.repo().get_current_version()
+    return setuptools_scm.get_version()
 
 
 def version_from_sdist():
