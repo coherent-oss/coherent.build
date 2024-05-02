@@ -115,8 +115,13 @@ def wheel_walk(filter_: Wheel):
 
 def make_sdist_metadata(name, version) -> tarfile.TarInfo:
     info = tarfile.TarInfo(f"{normalize(name)}-{version}/PKG-INFO")
-    metadata = f"Metadata-Version: 1.2\nName: {name}\nVersion: {version}\n"
-    file = io.BytesIO(metadata.encode("utf-8"))
+    metadata = {
+        "Metadata-Version": "1.2",
+        "Name": name,
+        "Version": version,
+    }
+    metadata_text = "\n".join(f"{key}: {value}" for key, value in metadata.items())
+    file = io.BytesIO(metadata_text.encode("utf-8"))
     info.size = len(file.getbuffer())
     info.mtime = time.time()
     return info, file
