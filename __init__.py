@@ -67,13 +67,17 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     with zipfile.ZipFile(filename, "w") as zf:
         for info in wheel_walk(Wheel(root)):
             zf.write(info.path, arcname=info.name)
-        zf.writestr(*make_wheel_metadata(name, version))
+        for md_name, contents in make_wheel_metadata(name, version):
+            zf.writestr(md_name, contents)
     return str(filename)
 
 
 def make_wheel_metadata(name, version):
     metadata = f"Name: {name}\nVersion: {version}\n"
-    return f"{normalize(name)}-{version}.dist-info/METADATA", metadata
+    dist_info = f"{normalize(name)}-{version}.dist-info"
+    yield f"{dist_info}/METADATA", metadata
+    wheel_md = "Wheel-Version: 1.0\nGenerator: coherent.build\nRoot-Is-Purelib: true\nTag: py3-none-any\n"
+    yield f"{dist_info}/WHEEL", wheel_md
 
 
 def wheel_walk(filter_: Wheel):
