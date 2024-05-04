@@ -25,24 +25,12 @@ from pip_run import scripts
 from jaraco.context import suppress
 
 
-def name_from_sdist():
-    return importlib.metadata.PathDistribution(pathlib.Path()).metadata.get("Name")
-
-
 def name_from_path():
     return pathlib.Path(".").absolute().name
 
 
 def version_from_vcs():
     return setuptools_scm.get_version()
-
-
-def version_from_sdist():
-    return importlib.metadata.PathDistribution(pathlib.Path()).metadata.get("Version")
-
-
-def author_from_sdist():
-    return importlib.metadata.PathDistribution(pathlib.Path()).metadata.get("Author")
 
 
 class Filter:
@@ -80,16 +68,13 @@ def normalize(name):
 
 
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
-    name = name_from_sdist() or name_from_path()
-    root = name.replace(".", "/")
-    version = version_from_sdist() or version_from_vcs()
-    filename = (
-        pathlib.Path(wheel_directory) / f"{normalize(name)}-{version}-py3-none-any.whl"
-    )
+    metadata = Metadata.from_sdist()
+    root = metadata['Name'].replace(".", "/")
+    filename = (pathlib.Path(wheel_directory) / f"{metadata.id}-py3-none-any.whl")
     with WheelFile(filename, "w") as zf:
         for info in wheel_walk(Wheel(root)):
             zf.write(info.path, arcname=info.name)
-        for md_name, contents in make_wheel_metadata(name, version):
+        for md_name, contents in make_wheel_metadata(metadata):
             zf.writestr(md_name, contents)
     return str(filename)
 
@@ -101,17 +86,11 @@ def read_deps():
     return scripts.DepsReader.search(["__init__.py"])
 
 
-def make_wheel_metadata(name, version):
-    metadata = {
-        "Metadata-Version": "2.1",
-        "Name": name,
-        "Version": version,
-        "Author-Email": author_from_sdist(),
-    }
+def make_wheel_metadata(metadata):
+    dist_info = f"{metadata.id}.dist-info"
     metadata = render(metadata)
     for dep in read_deps():
         metadata += f"Requires-Dist: {dep}\n"
-    dist_info = f"{normalize(name)}-{version}.dist-info"
     yield f"{dist_info}/METADATA", metadata
     wheel_md = "Wheel-Version: 1.0\nGenerator: coherent.build\nRoot-Is-Purelib: true\nTag: py3-none-any\n"
     yield f"{dist_info}/WHEEL", wheel_md
@@ -189,6 +168,10 @@ class Metadata(dict):
         yield "Name", name_from_path()
         yield "Version", version_from_vcs()
         yield "Author-Email", author_from_vcs()
+
+    @classmethod
+    def from_sdist(cls):
+        return cls(importlib.metadata.PathDistribution(pathlib.Path()).metadata)
 
 
 def make_sdist_metadata(metadata) -> tarfile.TarInfo:
