@@ -104,7 +104,7 @@ def read_deps():
 
 def make_wheel_metadata(metadata):
     dist_info = f"{metadata.id}.dist-info"
-    yield f"{dist_info}/METADATA", render(metadata)
+    yield f"{dist_info}/METADATA", metadata.render()
     wheel_md = Metadata(
         {
             "Wheel-Version": "1.0",
@@ -113,7 +113,7 @@ def make_wheel_metadata(metadata):
             "Tag": "py3-none-any",
         }
     )
-    yield f"{dist_info}/WHEEL", render(wheel_md)
+    yield f"{dist_info}/WHEEL", wheel_md.render()
 
 
 def wheel_walk(filter_: Wheel):
@@ -164,10 +164,6 @@ def author_from_vcs():
     return next(contribs).combined_detail
 
 
-def render(metadata):
-    return str(metadata)
-
-
 class Metadata(Message):
     """
     >>> md = Metadata.discover()
@@ -179,11 +175,9 @@ class Metadata(Message):
         super().__init__()
         if isinstance(values, Message):
             self._headers = values._headers
-            self._description_in_payload()
             return
         for item in dict(values).items():
             self.add_header(*item)
-        self._description_in_payload()
 
     def _description_in_payload(self):
         if "Description" in self:
@@ -213,6 +207,10 @@ class Metadata(Message):
     def from_sdist(cls):
         return cls(importlib.metadata.PathDistribution(pathlib.Path()).metadata)
 
+    def render(self):
+        self._description_in_payload()
+        return str(self)
+
 
 def guess_content_type(path: pathlib.Path):
     type, _ = mimetypes.guess_type(str(path))
@@ -234,7 +232,7 @@ def description_from_readme():
 
 def make_sdist_metadata(metadata) -> tarfile.TarInfo:
     info = tarfile.TarInfo(f"{metadata.id}/PKG-INFO")
-    file = io.BytesIO(render(metadata).encode("utf-8"))
+    file = io.BytesIO(metadata.render().encode("utf-8"))
     info.size = len(file.getbuffer())
     info.mtime = time.time()
     return info, file
