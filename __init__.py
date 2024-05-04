@@ -18,6 +18,7 @@ import subprocess
 import tarfile
 import time
 import types
+from email.message import Message
 
 import setuptools_scm
 from wheel.wheelfile import WheelFile
@@ -153,7 +154,15 @@ def render(metadata):
     )
 
 
-class Metadata(dict):
+class Metadata(Message):
+    def __init__(self, values):
+        super().__init__()
+        if isinstance(values, Message):
+            self._headers = values._headers
+            return
+        for item in values:
+            self.add_header(*item)
+
     @property
     def id(self):
         return f"{normalize(self['Name'])}-{self['Version']}"
