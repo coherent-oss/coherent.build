@@ -34,6 +34,20 @@ def version_from_vcs():
     return setuptools_scm.get_version()
 
 
+@suppress(Exception)
+def summary_from_github():
+    return (
+        json.loads(
+            subprocess.check_output(
+                ["gh", "repo", "view", "--json", "description"],
+                text=True,
+                encoding="utf-8",
+            )
+        )["description"]
+        or None
+    )
+
+
 class Filter:
     def __init__(self, name: str):
         self.name = name
@@ -70,8 +84,8 @@ def normalize(name):
 
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     metadata = Metadata.from_sdist()
-    root = metadata['Name'].replace(".", "/")
-    filename = (pathlib.Path(wheel_directory) / f"{metadata.id}-py3-none-any.whl")
+    root = metadata["Name"].replace(".", "/")
+    filename = pathlib.Path(wheel_directory) / f"{metadata.id}-py3-none-any.whl"
     with WheelFile(filename, "w") as zf:
         for info in wheel_walk(Wheel(root)):
             zf.write(info.path, arcname=info.name)
@@ -152,6 +166,12 @@ def render(metadata):
 
 
 class Metadata(Message):
+    """
+    >>> md = Metadata.discover()
+    >>> md['Summary']
+    'A zero-config Python project build backend'
+    """
+
     def __init__(self, values):
         super().__init__()
         if isinstance(values, Message):
@@ -174,6 +194,7 @@ class Metadata(Message):
         yield "Name", name_from_path()
         yield "Version", version_from_vcs()
         yield "Author-Email", author_from_vcs()
+        yield "Summary", summary_from_github()
         for dep in read_deps():
             yield "Requires-Dist", dep
 
