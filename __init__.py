@@ -89,10 +89,7 @@ def read_deps():
 
 def make_wheel_metadata(metadata):
     dist_info = f"{metadata.id}.dist-info"
-    metadata = render(metadata)
-    for dep in read_deps():
-        metadata += f"Requires-Dist: {dep}\n"
-    yield f"{dist_info}/METADATA", metadata
+    yield f"{dist_info}/METADATA", render(metadata)
     wheel_md = "Wheel-Version: 1.0\nGenerator: coherent.build\nRoot-Is-Purelib: true\nTag: py3-none-any\n"
     yield f"{dist_info}/WHEEL", wheel_md
 
@@ -177,6 +174,8 @@ class Metadata(Message):
         yield "Name", name_from_path()
         yield "Version", version_from_vcs()
         yield "Author-Email", author_from_vcs()
+        for dep in read_deps():
+            yield "Requires-Dist", dep
 
     @classmethod
     def from_sdist(cls):
