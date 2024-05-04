@@ -174,14 +174,19 @@ def render(metadata):
     )
 
 
-def make_sdist_metadata(name, version) -> tarfile.TarInfo:
-    info = tarfile.TarInfo(f"{normalize(name)}-{version}/PKG-INFO")
-    metadata = {
-        "Metadata-Version": "1.2",
-        "Name": name,
-        "Version": version,
+def discover_metadata():
+    return {
+        "Metadata-Version": "2.3",
+        "Name": name_from_path(),
+        "Version": version_from_vcs(),
         "Author-Email": author_from_vcs(),
     }
+
+
+def make_sdist_metadata(metadata) -> tarfile.TarInfo:
+    name = metadata['Name']
+    version = metadata['Version']
+    info = tarfile.TarInfo(f"{normalize(name)}-{version}/PKG-INFO")
     file = io.BytesIO(render(metadata).encode("utf-8"))
     info.size = len(file.getbuffer())
     info.mtime = time.time()
@@ -189,10 +194,11 @@ def make_sdist_metadata(name, version) -> tarfile.TarInfo:
 
 
 def build_sdist(sdist_directory, config_settings=None):
-    name = name_from_path()
-    version = version_from_vcs()
+    metadata = discover_metadata()
+    name = metadata['Name']
+    version = metadata['Version']
     filename = pathlib.Path(sdist_directory) / f"{normalize(name)}-{version}.tar.gz"
     with tarfile.open(filename, "w:gz") as tf:
         tf.add(pathlib.Path(), filter=SDist(f"{normalize(name)}-{version}"))
-        tf.addfile(*make_sdist_metadata(name, version))
+        tf.addfile(*make_sdist_metadata(metadata))
     return str(filename)
