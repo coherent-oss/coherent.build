@@ -10,6 +10,7 @@ __requires__ = [
 import importlib.metadata
 import io
 import json
+import mimetypes
 import os
 import pathlib
 import posixpath
@@ -157,12 +158,7 @@ def author_from_vcs():
 
 
 def render(metadata):
-    return (
-        "\n".join(
-            f"{key}: {value}" for key, value in metadata.items() if value is not None
-        )
-        + "\n"
-    )
+    return str(metadata)
 
 
 class Metadata(Message):
@@ -176,9 +172,16 @@ class Metadata(Message):
         super().__init__()
         if isinstance(values, Message):
             self._headers = values._headers
+            self._description_in_payload()
             return
         for item in values:
             self.add_header(*item)
+        self._description_in_payload()
+
+    def _description_in_payload(self):
+        if "Description" in self:
+            self.set_payload(self["Description"])
+            del self["Description"]
 
     @property
     def id(self):
@@ -197,10 +200,29 @@ class Metadata(Message):
         yield "Summary", summary_from_github()
         for dep in read_deps():
             yield "Requires-Dist", dep
+        yield from description_from_readme()
 
     @classmethod
     def from_sdist(cls):
         return cls(importlib.metadata.PathDistribution(pathlib.Path()).metadata)
+
+
+def guess_content_type(path: pathlib.Path):
+    type, _ = mimetypes.guess_type(str(path))
+    if not type:
+        # mimetypes is unreliable, even for the most common extensions
+        lookup = {".md": "text/markdown", ".rst": "text/x-rst", "": "text/plain"}
+        return lookup[path.suffix]
+    return type
+
+
+@suppress(Exception)
+def description_from_readme():
+    (readme,) = pathlib.Path().glob("README*")
+    ct = guess_content_type(readme)
+    assert ct
+    yield "Description-Content-Type", ct
+    yield "Description", readme.read_text(encoding="utf-8")
 
 
 def make_sdist_metadata(metadata) -> tarfile.TarInfo:
