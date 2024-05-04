@@ -105,8 +105,15 @@ def read_deps():
 def make_wheel_metadata(metadata):
     dist_info = f"{metadata.id}.dist-info"
     yield f"{dist_info}/METADATA", render(metadata)
-    wheel_md = "Wheel-Version: 1.0\nGenerator: coherent.build\nRoot-Is-Purelib: true\nTag: py3-none-any\n"
-    yield f"{dist_info}/WHEEL", wheel_md
+    wheel_md = Metadata(
+        {
+            "Wheel-Version": "1.0",
+            "Generator": "coherent.build",
+            "Root-Is-Purelib": "true",
+            "Tag": "py3-none-any",
+        }
+    )
+    yield f"{dist_info}/WHEEL", render(wheel_md)
 
 
 def wheel_walk(filter_: Wheel):
@@ -174,7 +181,7 @@ class Metadata(Message):
             self._headers = values._headers
             self._description_in_payload()
             return
-        for item in values:
+        for item in dict(values).items():
             self.add_header(*item)
         self._description_in_payload()
 
