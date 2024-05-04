@@ -179,14 +179,16 @@ class Metadata(dict):
     def id(self):
         return f"{normalize(self['Name'])}-{self['Version']}"
 
+    @classmethod
+    def discover(cls):
+        return cls(cls._discover_fields())
 
-def discover_metadata():
-    return Metadata({
-        "Metadata-Version": "2.3",
-        "Name": name_from_path(),
-        "Version": version_from_vcs(),
-        "Author-Email": author_from_vcs(),
-    })
+    @staticmethod
+    def _discover_fields():
+        yield "Metadata-Version", "2.3"
+        yield "Name", name_from_path()
+        yield "Version", version_from_vcs()
+        yield "Author-Email", author_from_vcs()
 
 
 def make_sdist_metadata(metadata) -> tarfile.TarInfo:
@@ -198,7 +200,7 @@ def make_sdist_metadata(metadata) -> tarfile.TarInfo:
 
 
 def build_sdist(sdist_directory, config_settings=None):
-    metadata = discover_metadata()
+    metadata = Metadata.discover()
     filename = pathlib.Path(sdist_directory) / f"{metadata.id}.tar.gz"
     with tarfile.open(filename, "w:gz") as tf:
         tf.add(pathlib.Path(), filter=SDist(metadata.id))
