@@ -69,7 +69,24 @@ class Filter:
 
 
 class SDist(Filter):
-    ignored = [r"\.git", "dist", r".*\b__pycache__$"]
+    """
+    >>> sf = SDist(name="foo")
+
+    Ignores the .git directory
+    >>> sf(types.SimpleNamespace(name='./.git'))
+
+    Ignores __pycache__ directories
+    >>> sf(types.SimpleNamespace(name='./bar/__pycache__'))
+
+    Ignore paths starting with a dot
+    >>> sf(types.SimpleNamespace(name='./bar/.DS_Store'))
+
+    Should not ignore nested dist dirs
+    >>> sf(types.SimpleNamespace(name='./bar/dist'))
+    namespace(name='foo/bar/dist')
+    """
+
+    ignored = ["dist", r"(.*[/])?__pycache__$", r"(.*[/])?[.]"]
 
 
 class Wheel(Filter):
