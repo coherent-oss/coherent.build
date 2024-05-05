@@ -31,6 +31,11 @@ from pip_run import scripts
 from jaraco.context import suppress
 
 
+mimetypes.add_type("text/plain", "", strict=True)
+mimetypes.add_type("text/markdown", ".md", strict=True)
+mimetypes.add_type("text/x-rst", ".rst", strict=True)
+
+
 def name_from_path():
     return pathlib.Path(".").absolute().name
 
@@ -249,11 +254,15 @@ class Metadata(Message):
 
 
 def guess_content_type(path: pathlib.Path):
+    """
+    >>> guess_content_type('foo.md')
+    'text/markdown'
+    >>> guess_content_type('foo.rst')
+    'text/x-rst'
+    >>> guess_content_type('foo')
+    'text/plain'
+    """
     type, _ = mimetypes.guess_type(str(path))
-    if not type:
-        # mimetypes is unreliable, even for the most common extensions
-        lookup = {".md": "text/markdown", ".rst": "text/x-rst", "": "text/plain"}
-        return lookup[path.suffix]
     return type
 
 
