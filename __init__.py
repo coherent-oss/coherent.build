@@ -7,6 +7,7 @@ __requires__ = [
     "jaraco.context",
 ]
 
+import functools
 import importlib.metadata
 import io
 import json
@@ -19,7 +20,10 @@ import subprocess
 import tarfile
 import time
 import types
+
+from collections.abc import Mapping
 from email.message import Message
+from typing import Iterable
 
 import setuptools_scm
 from wheel.wheelfile import WheelFile
@@ -164,6 +168,18 @@ def author_from_vcs():
     return next(contribs).combined_detail
 
 
+@functools.singledispatch
+def always_items(
+    values: Mapping | Iterable[tuple[str, str]],
+) -> Iterable[tuple[str, str]]:
+    return values
+
+
+@always_items.register
+def _(values: Mapping) -> Iterable[tuple[str, str]]:
+    return values.items()
+
+
 class Metadata(Message):
     """
     >>> md = Metadata.discover()
@@ -176,7 +192,7 @@ class Metadata(Message):
         if isinstance(values, Message):
             self._headers = values._headers
             return
-        for item in dict(values).items():
+        for item in always_items(values):
             self.add_header(*item)
 
     def _description_in_payload(self):
