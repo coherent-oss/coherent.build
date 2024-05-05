@@ -88,7 +88,7 @@ def normalize(name):
 
 
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
-    metadata = Metadata.from_sdist()
+    metadata = Metadata.from_sdist() or Metadata.discover()
     root = metadata["Name"].replace(".", "/")
     filename = pathlib.Path(wheel_directory) / f"{metadata.id}-py3-none-any.whl"
     with WheelFile(filename, "w") as zf:
@@ -223,7 +223,8 @@ class Metadata(Message):
 
     @classmethod
     def from_sdist(cls):
-        return cls(importlib.metadata.PathDistribution(pathlib.Path()).metadata)
+        sdist_metadata = importlib.metadata.PathDistribution(pathlib.Path()).metadata
+        return (sdist_metadata or None) and cls(sdist_metadata)
 
     def render(self):
         self._description_in_payload()
