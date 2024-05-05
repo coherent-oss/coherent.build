@@ -5,6 +5,7 @@ __requires__ = [
     "build",
     "git-fame",
     "jaraco.context",
+    "requests",
 ]
 
 import functools
@@ -25,6 +26,7 @@ from collections.abc import Mapping
 from email.message import Message
 from typing import Iterable
 
+import requests
 import setuptools_scm
 from wheel.wheelfile import WheelFile
 from pip_run import scripts
@@ -56,6 +58,15 @@ def summary_from_github():
         )["description"]
         or None
     )
+
+
+def python_requires_supported():
+    owner = "python"
+    repo = "cpython"
+    url = f"https://api.github.com/repos/{owner}/{repo}/branches"
+    branches = requests.get(url).json()
+    # cheat and grab the first branch, which is the oldest supported Python version
+    return f'>= {branches[0]["name"]}'
 
 
 class Filter:
@@ -239,6 +250,7 @@ class Metadata(Message):
         yield "Version", version_from_vcs()
         yield "Author-Email", author_from_vcs()
         yield "Summary", summary_from_github()
+        yield "Requires-Python", python_requires_supported()
         for dep in read_deps():
             yield "Requires-Dist", dep
         yield from description_from_readme()
