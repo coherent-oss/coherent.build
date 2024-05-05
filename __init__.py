@@ -170,7 +170,7 @@ def author_from_vcs():
 
 @functools.singledispatch
 def always_items(
-    values: Mapping | Iterable[tuple[str, str]],
+    values: Mapping | Message | Iterable[tuple[str, str]],
 ) -> Iterable[tuple[str, str]]:
     return values
 
@@ -178,6 +178,11 @@ def always_items(
 @always_items.register
 def _(values: Mapping) -> Iterable[tuple[str, str]]:
     return values.items()
+
+
+@always_items.register
+def _(values: Message) -> Iterable[tuple[str, str]]:
+    return values._headers
 
 
 class Metadata(Message):
@@ -189,9 +194,6 @@ class Metadata(Message):
 
     def __init__(self, values):
         super().__init__()
-        if isinstance(values, Message):
-            self._headers = values._headers
-            return
         for item in always_items(values):
             self.add_header(*item)
 
