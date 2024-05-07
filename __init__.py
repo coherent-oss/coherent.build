@@ -6,6 +6,7 @@ __requires__ = [
     'git-fame',
     'jaraco.context',
     'requests',
+    'packaging',
 ]
 
 import functools
@@ -26,6 +27,7 @@ from collections.abc import Mapping
 from email.message import Message
 from typing import Iterable
 
+import packaging
 import requests
 import setuptools_scm
 from wheel.wheelfile import WheelFile
@@ -125,9 +127,8 @@ class ZipInfo(types.SimpleNamespace):
         super().__init__(path=path, name=zip_name)
 
 
-def normalize(name):
-    # todo: do proper normalization
-    return name.replace('.', '_')
+def _normalize(name):
+    return packaging.utils.canonicalize_name(name).replace('-', '_')
 
 
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
@@ -249,7 +250,7 @@ class Metadata(Message):
         >>> Metadata(dict(Name='foo.bar', Version='1.0.0')).id
         'foo_bar-1.0.0'
         """
-        return f"{normalize(self['Name'])}-{self['Version']}"
+        return f"{_normalize(self['Name'])}-{self['Version']}"
 
     @classmethod
     def discover(cls):
