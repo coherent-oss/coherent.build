@@ -113,7 +113,7 @@ def guess_content_type(path: pathlib.Path):
     return type
 
 
-@suppress(Exception)
+@suppress(ValueError, AssertionError)
 def description_from_readme():
     (readme,) = pathlib.Path().glob('README*')
     ct = guess_content_type(readme)
