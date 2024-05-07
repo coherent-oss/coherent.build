@@ -77,12 +77,20 @@ class Contributor(types.SimpleNamespace):
 def author_from_vcs():
     # run git-fame twice to get both name and email
     cmd = ['git-fame', '--format', 'json']
-    names_data = json.loads(subprocess.check_output(cmd, text=True, encoding='utf-8'))
+    names_data = json.loads(
+        subprocess.check_output(
+            cmd,
+            text=True,
+            encoding='utf-8',
+            stderr=subprocess.DEVNULL,
+        )
+    )
     emails_data = json.loads(
         subprocess.check_output(
             cmd + ['--show-email'],
             text=True,
             encoding='utf-8',
+            stderr=subprocess.DEVNULL,
         )
     )
     names_data['columns'][0] = 'name'
