@@ -245,6 +245,10 @@ class Metadata(Message):
 
     @property
     def id(self):
+        """
+        >>> Metadata(dict(Name='foo.bar', Version='1.0.0')).id
+        'foo_bar-1.0.0'
+        """
         return f"{normalize(self['Name'])}-{self['Version']}"
 
     @classmethod
