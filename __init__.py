@@ -46,8 +46,14 @@ def version_from_vcs():
     return setuptools_scm.get_version()
 
 
-@suppress(Exception)
+@suppress(subprocess.CalledProcessError)
 def summary_from_github():
+    """
+    Load the summary from GitHub.
+
+    >>> summary_from_github()
+    'A zero-config Python project build backend'
+    """
     return (
         json.loads(
             subprocess.check_output(
@@ -61,6 +67,10 @@ def summary_from_github():
 
 
 def python_requires_supported():
+    """
+    >>> python_requires_supported()
+    '>= 3...'
+    """
     owner = 'python'
     repo = 'cpython'
     url = f'https://api.github.com/repos/{owner}/{repo}/branches'
