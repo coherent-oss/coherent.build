@@ -1,3 +1,4 @@
+import contextlib
 import json
 import pathlib
 import subprocess
@@ -121,10 +122,10 @@ def guess_content_type(path: pathlib.Path):
     return type
 
 
-@suppress(ValueError, AssertionError)
 def description_from_readme():
-    (readme,) = pathlib.Path().glob('README*')
-    ct = guess_content_type(readme)
-    assert ct
-    yield 'Description-Content-Type', ct
-    yield 'Description', readme.read_text(encoding='utf-8')
+    with contextlib.suppress(ValueError, AssertionError):
+        (readme,) = pathlib.Path().glob('README*')
+        ct = guess_content_type(readme)
+        assert ct
+        yield 'Description-Content-Type', ct
+        yield 'Description', readme.read_text(encoding='utf-8')
