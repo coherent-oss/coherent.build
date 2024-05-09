@@ -168,7 +168,7 @@ class Metadata(Message):
     @staticmethod
     def _discover_fields():
         yield 'Metadata-Version', '2.3'
-        yield 'Name', discovery.name_from_path()
+        yield 'Name', discovery.best_name()
         yield 'Version', discovery.version_from_vcs()
         yield 'Author-Email', discovery.author_from_vcs()
         yield 'Summary', discovery.summary_from_github()

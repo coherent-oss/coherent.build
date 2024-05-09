@@ -19,8 +19,35 @@ mimetypes.add_type('text/markdown', '.md', strict=True)
 mimetypes.add_type('text/x-rst', '.rst', strict=True)
 
 
+@suppress(subprocess.CalledProcessError)
+def name_from_vcs():
+    """
+    >>> name_from_vcs()
+    'coherent.build'
+    """
+    url = subprocess.check_output(
+        ['git', 'remote', 'get-url', 'origin'],
+        text=True,
+        encoding='utf-8',
+    )
+    _, _, tail = url.strip().rpartition('/')
+    return tail
+
+
 def name_from_path():
+    """
+    >>> name_from_vcs()
+    'coherent.build'
+    """
     return pathlib.Path('.').absolute().name
+
+
+def best_name():
+    """
+    Name is important, so if the name can't be inferred from the VCS,
+    use the path.
+    """
+    return name_from_vcs() or name_from_path()
 
 
 def version_from_vcs():
