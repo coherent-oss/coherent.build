@@ -7,6 +7,7 @@ __requires__ = [
     'jaraco.context',
     'requests',
     'packaging',
+    'jaraco.functools',
 ]
 
 import functools
@@ -174,6 +175,7 @@ class Metadata(Message):
         yield 'Requires-Python', discovery.python_requires_supported()
         for dep in discovery.read_deps():
             yield 'Requires-Dist', dep
+        yield 'Project-URL', f'Homepage, {discovery.source_url()}'
         yield from discovery.description_from_readme()
 
     @classmethod

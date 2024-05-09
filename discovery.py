@@ -1,10 +1,12 @@
 import contextlib
+import functools
 import json
 import pathlib
 import subprocess
 import types
 import mimetypes
 
+import jaraco.functools
 import requests
 import setuptools_scm
 from jaraco.context import suppress
@@ -24,7 +26,24 @@ def version_from_vcs():
     return setuptools_scm.get_version()
 
 
+def none_as(replacement):
+    return lambda val: replacement if val is None else val
+
+
+@functools.lru_cache
+@jaraco.functools.apply(none_as({}))
 @suppress(subprocess.CalledProcessError)
+def repo_info():
+    data = json.loads(
+        subprocess.check_output(
+            ['gh', 'repo', 'view', '--json', 'description,url'],
+            text=True,
+            encoding='utf-8',
+        )
+    )
+    return {k: v for k, v in data.items() if v}
+
+
 def summary_from_github():
     """
     Load the summary from GitHub.
@@ -32,16 +51,17 @@ def summary_from_github():
     >>> summary_from_github()
     'A zero-config Python project build backend'
     """
-    return (
-        json.loads(
-            subprocess.check_output(
-                ['gh', 'repo', 'view', '--json', 'description'],
-                text=True,
-                encoding='utf-8',
-            )
-        )['description']
-        or None
-    )
+    return repo_info().get('description')
+
+
+def source_url():
+    """
+    Load the repo URL from GitHub.
+
+    >>> source_url()
+    'https://github.com/coherent-oss/coherent.build'
+    """
+    return repo_info().get('url')
 
 
 def python_requires_supported():
