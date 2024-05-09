@@ -5,6 +5,7 @@ import pathlib
 import subprocess
 import types
 import mimetypes
+from collections.abc import Mapping
 
 import jaraco.functools
 import requests
@@ -33,7 +34,7 @@ def none_as(replacement):
 @functools.lru_cache
 @jaraco.functools.apply(none_as({}))
 @suppress(subprocess.CalledProcessError)
-def repo_info():
+def repo_info() -> Mapping:
     data = json.loads(
         subprocess.check_output(
             ['gh', 'repo', 'view', '--json', 'description,url'],
