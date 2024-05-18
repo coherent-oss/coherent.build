@@ -1,5 +1,6 @@
 import contextlib
 import importlib.resources
+import logging
 import pathlib
 import runpy
 
@@ -18,6 +19,7 @@ def write_pyproject():
 
 
 def run():
+    logging.basicConfig()
     with write_pyproject():
         runpy.run_module('build', run_name='__main__')
 

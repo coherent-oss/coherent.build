@@ -1,6 +1,7 @@
 import contextlib
 import functools
 import json
+import logging
 import pathlib
 import subprocess
 import types
@@ -13,6 +14,8 @@ import setuptools_scm
 from jaraco.context import suppress
 from pip_run import scripts
 
+
+log = logging.getLogger(__name__)
 
 mimetypes.add_type('text/plain', '', strict=True)
 mimetypes.add_type('text/markdown', '.md', strict=True)
@@ -104,8 +107,9 @@ def python_requires_supported():
     # cheat and grab the first branch, which is the oldest supported Python version
     try:
         return f'>= {branches[0]["name"]}'
-    except KeyError as err:
-        raise RuntimeError(f"Unexpected {branches=}") from err
+    except KeyError:
+        log.warning(f"Unexpected {branches=}")
+        return ">= 3.8"
 
 
 def read_deps():
