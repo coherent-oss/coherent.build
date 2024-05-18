@@ -106,10 +106,11 @@ def python_requires_supported():
     branches = requests.get(url).json()
     # cheat and grab the first branch, which is the oldest supported Python version
     try:
-        return f'>= {branches[0]["name"]}'
+        min_ver = branches[0]["name"]
     except KeyError:
         log.warning(f"Unexpected {branches=}")
-        return ">= 3.8"
+        min_ver = "3.8"
+    return f'>= {min_ver}'
 
 
 def read_deps():
