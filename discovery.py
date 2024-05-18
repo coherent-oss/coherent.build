@@ -102,7 +102,10 @@ def python_requires_supported():
     url = f'https://api.github.com/repos/{owner}/{repo}/branches'
     branches = requests.get(url).json()
     # cheat and grab the first branch, which is the oldest supported Python version
-    return f'>= {branches[0]["name"]}'
+    try:
+        return f'>= {branches[0]["name"]}'
+    except KeyError as err:
+        raise RuntimeError(f"Unexpected {branches=}") from err
 
 
 def read_deps():
