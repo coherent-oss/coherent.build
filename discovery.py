@@ -31,7 +31,7 @@ def name_from_vcs():
         encoding='utf-8',
     )
     _, _, tail = url.strip().rpartition('/')
-    return tail
+    return tail.removesuffix('.git')
 
 
 def name_from_path():
