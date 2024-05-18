@@ -149,8 +149,11 @@ class Metadata(Message):
         yield 'Author-Email', discovery.author_from_vcs()
         yield 'Summary', discovery.summary_from_github()
         yield 'Requires-Python', discovery.python_requires_supported()
-        for dep in discovery.read_deps():
+        deps = list(discovery.read_deps())
+        for dep in deps:
             yield 'Requires-Dist', dep
+        for extra in discovery.extras_from_deps(deps):
+            yield 'Provides-Extra', extra
         yield 'Project-URL', f'Homepage, {discovery.source_url()}'
         yield from discovery.description_from_readme()
 

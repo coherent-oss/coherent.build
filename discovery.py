@@ -2,6 +2,7 @@ import contextlib
 import functools
 import json
 import logging
+import operator
 import pathlib
 import subprocess
 import types
@@ -9,6 +10,7 @@ import mimetypes
 from collections.abc import Mapping
 
 import jaraco.functools
+import packaging.requirements
 import requests
 import setuptools_scm
 from jaraco.context import suppress
@@ -118,6 +120,22 @@ def read_deps():
     Read deps from ``__init__.py``.
     """
     return scripts.DepsReader.search(['__init__.py'])
+
+
+def extras_from_dep(dep):
+    try:
+        markers = packaging.requirements.Requirement(dep).marker._markers
+    except AttributeError:
+        markers = ()
+    return set(
+        marker[2].value
+        for marker in markers
+        if isinstance(marker, tuple) and marker[0].value == 'extra'
+    )
+
+
+def extras_from_deps(deps):
+    return functools.reduce(operator.or_, map(extras_from_dep, deps))
 
 
 def _to_mapping(fame):
