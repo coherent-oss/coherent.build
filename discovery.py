@@ -1,4 +1,5 @@
 import contextlib
+import datetime
 import functools
 import json
 import logging
@@ -9,6 +10,7 @@ import types
 import mimetypes
 from collections.abc import Mapping
 
+import dateutil.parser
 import jaraco.functools
 import packaging.requirements
 import requests
@@ -207,8 +209,16 @@ def description_from_readme():
 
 
 def age_of_repo():
-    """stubbed"""
-    return datetime.timedelta()
+    """Return the age of the repo."""
+    proc = subprocess.Popen(
+        ['git', 'log', '--reverse', '--pretty=%ad', '--date', 'iso'],
+        stdout=subprocess.PIPE,
+        text=True,
+        encoding='utf-8',
+    )
+    first_line = proc.stdout.readline().strip()
+    proc.terminate()
+    return datetime.datetime.now(datetime.UTC) - dateutil.parser.parse(first_line)
 
 
 def generate_classifiers():
