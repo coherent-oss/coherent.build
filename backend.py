@@ -156,6 +156,8 @@ class Metadata(Message):
             yield 'Provides-Extra', extra
         yield 'Project-URL', f'Homepage, {discovery.source_url()}'
         yield from discovery.description_from_readme()
+        for classifier in discovery.generate_classifiers():
+            yield 'Classifier', classifier
 
     @classmethod
     def from_sdist(cls):

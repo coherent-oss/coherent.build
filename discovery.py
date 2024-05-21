@@ -14,6 +14,7 @@ import packaging.requirements
 import requests
 import setuptools_scm
 from jaraco.context import suppress
+from packaging.version import Version
 from pip_run import scripts
 
 
@@ -203,3 +204,22 @@ def description_from_readme():
         assert ct
         yield 'Description-Content-Type', ct
         yield 'Description', readme.read_text(encoding='utf-8')
+
+
+def age_of_repo():
+    """stubbed"""
+    return datetime.timedelta()
+
+
+def generate_classifiers():
+    yield (
+        'Development Status :: 4 - Beta'
+        if Version(version_from_vcs()) < Version('1.0')
+        else 'Development Status :: 5 - Production/Stable'
+        if age_of_repo() < datetime.timedelta(years=1)
+        else 'Development Status :: 6 - Mature'
+    )
+    yield 'Intended Audience :: Developers'
+    yield 'License :: OSI Approved :: MIT License'
+    yield 'Programming Language :: Python :: 3'
+    yield 'Programming Language :: Python :: 3 :: Only'
