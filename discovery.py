@@ -238,7 +238,7 @@ def generate_classifiers():
         'Development Status :: 4 - Beta'
         if Version(version_from_vcs()) < Version('1.0')
         else 'Development Status :: 5 - Production/Stable'
-        if age_of_repo() < datetime.timedelta(years=1)
+        if age_of_repo() < datetime.timedelta(days=365)
         else 'Development Status :: 6 - Mature'
     )
     yield 'Intended Audience :: Developers'
