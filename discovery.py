@@ -19,7 +19,8 @@ import requests
 import setuptools_scm
 from jaraco.context import suppress
 from packaging.version import Version
-from pip_run import scripts
+
+from . import imports
 
 
 log = logging.getLogger(__name__)
@@ -124,7 +125,9 @@ def read_deps():
     """
     Read deps from ``__init__.py``.
     """
-    return scripts.DepsReader.search(['__init__.py'])
+    return itertools.chain.from_iterable(
+        map(imports.compute_requirements, pathlib.Path().glob('**/*.py'))
+    )
 
 
 def extras_from_dep(dep):

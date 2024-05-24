@@ -9,6 +9,8 @@ __requires__ = [
     'packaging',
     'jaraco.functools',
     'python-dateutil',
+    'keyring',
+    'google.generativeai',
 ]
 
 
