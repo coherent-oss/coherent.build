@@ -1,6 +1,7 @@
 import contextlib
 import datetime
 import functools
+import itertools
 import json
 import logging
 import operator
@@ -8,6 +9,7 @@ import pathlib
 import subprocess
 import types
 import mimetypes
+import urllib.parse
 from collections.abc import Mapping
 
 import dateutil.parser
@@ -211,13 +213,57 @@ def guess_content_type(path: pathlib.Path):
     return type
 
 
+def join(*strings):
+    return ''.join(strings)
+
+
+def inject_badges(readme, type):
+    """
+    Put badges at the top of the readme.
+    """
+    return '\n\n'.join(itertools.chain(render_badges(type), [readme]))
+
+
+def render_badge(type, *, image, target=None, alt_text=''):
+    markdown = join(
+        '[' * bool(target),
+        '![{alt_text}]({image})',
+        ']({target})' * bool(target),
+    )
+    rst = join(
+        '.. image:: {image}',
+        '\n   :target: {target}' * bool(target),
+        '\n   :alt: {name}' * bool(alt_text),
+    )
+    return locals().get(type, markdown).format_map(locals())
+
+
+def render_badges(type):
+    _, _, subtype = type.partition('/')
+    rb = functools.partial(render_badge, subtype.replace('x-', ''))
+    PROJECT = best_name()
+    yield rb(
+        image=f'https://img.shields.io/pypi/v/{PROJECT}',
+        target=f'https://pypi.org/project/{PROJECT}',
+    )
+
+    yield rb(image=f'https://img.shields.io/pypi/pyversions/{PROJECT}')
+
+    system = urllib.parse.quote('coherent system')
+    yield rb(
+        image=f'https://img.shields.io/badge/{system}-informational',
+        target='https://github.com/coherent-oss/system',
+        alt_text='Coherent Software Development System',
+    )
+
+
 def description_from_readme():
     with contextlib.suppress(ValueError, AssertionError):
         (readme,) = pathlib.Path().glob('README*')
         ct = guess_content_type(readme)
         assert ct
         yield 'Description-Content-Type', ct
-        yield 'Description', readme.read_text(encoding='utf-8')
+        yield 'Description', inject_badges(readme.read_text(encoding='utf-8'), ct)
 
 
 def age_of_repo():
