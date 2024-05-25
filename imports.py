@@ -3,6 +3,7 @@ import functools
 import hashlib
 import json
 import pathlib
+import textwrap
 
 import keyring
 
@@ -64,7 +65,23 @@ def cache(key, store=LocalStore()):
 
 @cache(key=hash)
 def compute_requirements(filename):
-    direction = "Given the following Python module, what third-party (PyPI) dependencies are needed to support the imports? Please write them as a standard requirements.txt file. The result may be empty if no imports rely on dependencies. Do not include any comments in the file."
+    direction = textwrap.dedent("""
+        Given the Python module in the code block below, what third-party
+        (PyPI) dependencies are needed to support the imports? Please
+        write them as a standard requirements.txt file. The result may be
+        empty if no imports rely on dependencies. Do not include any
+        comments in the file.
+
+        Remember the following import to package mappings:
+
+        - dateutil -> python-dateutil
+
+        Also, remember the following modules are supplied in the
+        standard library and don't require dependencies:
+
+        - runpy
+        - pathlib
+        """).lstrip()
     source = pathlib.Path(filename).read_text()
     prompt = direction + '\n\n' + f'```\n{source}\n```'
     result = query_gemini(prompt)
