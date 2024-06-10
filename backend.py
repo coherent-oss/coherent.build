@@ -57,7 +57,14 @@ class SDist(Filter):
 
 
 class Wheel(Filter):
-    ignored = ['docs', 'tests', 'README.*', 'PKG-INFO', '(meta)', 'pyproject.toml']
+    ignored = [
+        'docs',
+        'tests',
+        r'README.*',
+        'PKG-INFO',
+        re.escape('(meta)'),
+        re.escape('pyproject.toml'),
+    ]
 
 
 class ZipInfo(types.SimpleNamespace):
