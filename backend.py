@@ -1,3 +1,4 @@
+import contextlib
 import functools
 import importlib.metadata
 import io
@@ -79,6 +80,11 @@ def make_wheel_metadata(metadata):
         'Tag': 'py3-none-any',
     })
     yield f'{dist_info}/WHEEL', wheel_md.render()
+    with contextlib.suppress(FileNotFoundError):
+        yield (
+            f'{dist_info}/entry_points.txt',
+            pathlib.Path('(meta)/entry_points.txt').read_text(),
+        )
 
 
 def wheel_walk(filter_: Wheel):
