@@ -12,6 +12,7 @@ import types
 
 from collections.abc import Mapping
 from email.message import Message
+from jaraco.functools import pass_none
 from typing import Iterable
 
 import packaging
@@ -172,9 +173,9 @@ class Metadata(Message):
             yield 'Classifier', classifier
 
     @classmethod
-    def from_sdist(cls):
-        sdist_metadata = importlib.metadata.PathDistribution(pathlib.Path()).metadata
-        return (sdist_metadata or None) and cls(sdist_metadata)
+    def load(cls, info=pathlib.Path()):
+        md = importlib.metadata.PathDistribution(info).metadata
+        return (md or None) and cls(md)
 
     def render(self):
         self._description_in_payload()
@@ -189,8 +190,22 @@ def make_sdist_metadata(metadata) -> tarfile.TarInfo:
     return info, file
 
 
+def prepare_metadata_for_build_wheel(wheel_directory, config_settings=None):
+    metadata = Metadata.load() or Metadata.discover()
+
+    md_root = pathlib.Path(wheel_directory, f'{metadata.id}.dist-info')
+    md_root.mkdir()
+    for name, contents in make_wheel_metadata(metadata):
+        md_root.joinpath(name).write_text(contents)
+    return md_root.name
+
+
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
-    metadata = Metadata.from_sdist() or Metadata.discover()
+    metadata = (
+        pass_none(Metadata.load)(metadata_directory)
+        or Metadata.load()
+        or Metadata.discover()
+    )
     root = metadata['Name'].replace('.', '/')
     filename = pathlib.Path(wheel_directory) / f'{metadata.id}-py3-none-any.whl'
     with WheelFile(filename, 'w') as zf:
