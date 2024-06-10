@@ -225,6 +225,13 @@ def inject_badges(readme, type):
 
 
 def render_badge(type, *, image, target=None, alt_text=''):
+    """
+    >>> print(render_badge('markdown', image='file://foo.img', alt_text='foo'))
+    ![foo](file://foo.img)
+    >>> print(render_badge('rst', image='file://foo.img', alt_text='foo'))
+    .. image:: file://foo.img
+       :alt: foo
+    """
     markdown = join(
         '[' * bool(target),
         '![{alt_text}]({image})',
@@ -233,7 +240,7 @@ def render_badge(type, *, image, target=None, alt_text=''):
     rst = join(
         '.. image:: {image}',
         '\n   :target: {target}' * bool(target),
-        '\n   :alt: {name}' * bool(alt_text),
+        '\n   :alt: {alt_text}' * bool(alt_text),
     )
     return locals().get(type, markdown).format_map(locals())
 
