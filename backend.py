@@ -78,18 +78,17 @@ def _normalize(name):
 
 
 def make_wheel_metadata(metadata):
-    dist_info = f'{metadata.id}.dist-info'
-    yield f'{dist_info}/METADATA', metadata.render()
+    yield 'METADATA', metadata.render()
     wheel_md = Metadata({
         'Wheel-Version': '1.0',
         'Generator': 'coherent.build',
         'Root-Is-Purelib': 'true',
         'Tag': 'py3-none-any',
     })
-    yield f'{dist_info}/WHEEL', wheel_md.render()
+    yield 'WHEEL', wheel_md.render()
     with contextlib.suppress(FileNotFoundError):
         yield (
-            f'{dist_info}/entry_points.txt',
+            'entry_points.txt',
             pathlib.Path('(meta)/entry_points.txt').read_text(),
         )
 
@@ -197,8 +196,8 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     with WheelFile(filename, 'w') as zf:
         for info in wheel_walk(Wheel(root)):
             zf.write(info.path, arcname=info.name)
-        for md_name, contents in make_wheel_metadata(metadata):
-            zf.writestr(md_name, contents)
+        for name, contents in make_wheel_metadata(metadata):
+            zf.writestr(f'{metadata.id}.dist-info/{name}', contents)
     return str(filename)
 
 
