@@ -173,8 +173,8 @@ class Metadata(Message):
             yield 'Classifier', classifier
 
     @classmethod
-    def load(cls, info=pathlib.Path()):
-        md = importlib.metadata.PathDistribution(info).metadata
+    def load(cls, info: str | pathlib.Path = pathlib.Path()):
+        md = importlib.metadata.PathDistribution(pathlib.Path(info)).metadata
         return (md or None) and cls(md)
 
     def render(self):
