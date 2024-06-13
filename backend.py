@@ -7,6 +7,7 @@ import pathlib
 import posixpath
 import re
 import tarfile
+import textwrap
 import time
 import types
 
@@ -190,10 +191,10 @@ def make_sdist_metadata(metadata) -> tarfile.TarInfo:
     return info, file
 
 
-def prepare_metadata_for_build_wheel(wheel_directory, config_settings=None):
+def prepare_metadata(metadata_directory, config_settings=None):
     metadata = Metadata.load() or Metadata.discover()
 
-    md_root = pathlib.Path(wheel_directory, f'{metadata.id}.dist-info')
+    md_root = pathlib.Path(metadata_directory, f'{metadata.id}.dist-info')
     md_root.mkdir()
     for name, contents in make_wheel_metadata(metadata):
         md_root.joinpath(name).write_text(contents)
@@ -223,3 +224,32 @@ def build_sdist(sdist_directory, config_settings=None):
         tf.add(pathlib.Path(), filter=SDist(metadata.id))
         tf.addfile(*make_sdist_metadata(metadata))
     return str(filename)
+
+
+def build_editable(wheel_directory, config_settings=None, metadata_directory=None):
+    metadata = (
+        pass_none(Metadata.load)(metadata_directory)
+        or Metadata.load()
+        or Metadata.discover()
+    )
+    root = metadata['Name'].replace('.', '/')
+    filename = pathlib.Path(wheel_directory) / f'{metadata.id}-py3-none-any.whl'
+    with WheelFile(filename, 'w') as zf:
+        zf.writestr(f'{root}/__init__.py', proxy())
+        for name, contents in make_wheel_metadata(metadata):
+            zf.writestr(f'{metadata.id}.dist-info/{name}', contents)
+    return str(filename)
+
+
+def proxy():
+    return textwrap.dedent(f"""
+        __path__ = [{os.getcwd()!r}]
+        __file__ = __path__[0] + '/__init__.py'
+        try:
+            strm = open(__file__)
+        except FileNotFoundError:
+            pass
+        else:
+            with strm:
+                exec(strm.read())
+        """).lstrip()

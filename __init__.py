@@ -12,7 +12,22 @@ __requires__ = [
 ]
 
 
-from .backend import build_wheel, build_sdist, prepare_metadata_for_build_wheel
+from .backend import (
+    build_sdist,
+    prepare_metadata,
+    build_wheel,
+    build_editable,
+)
+
+prepare_metadata_for_build_wheel = prepare_metadata_for_build_editable = (
+    prepare_metadata
+)
 
 
-__all__ = ['build_wheel', 'build_sdist', 'prepare_metadata_for_build_wheel']
+__all__ = [
+    'build_sdist',
+    'prepare_metadata_for_build_wheel',
+    'prepare_metadata_for_build_editable',
+    'build_wheel',
+    'build_editable',
+]
