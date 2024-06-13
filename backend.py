@@ -70,9 +70,17 @@ class Wheel(Filter):
 
 
 class ZipInfo(types.SimpleNamespace):
-    def __init__(self, path):
-        zip_name = path.replace(os.pathsep, posixpath.sep)
-        super().__init__(path=path, name=zip_name)
+    @property
+    def arcname(self):
+        return self.path.replace(os.pathsep, posixpath.sep)
+
+    def write(self, zf: zipfile.ZipFile):
+        zf.write(self.path, arcname=self.arcname)
+
+
+class ZipData(types.SimpleNamespace):
+    def write(self, zf: zipfile.ZipFile):
+        zf.writestr(self.arcname, self.contents)
 
 
 def _normalize(name):
@@ -201,7 +209,12 @@ def prepare_metadata(metadata_directory, config_settings=None):
     return md_root.name
 
 
-def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
+def build_wheel(
+    wheel_directory,
+    config_settings=None,
+    metadata_directory=None,
+    contents=compose(wheel_walk, Wheel),
+):
     metadata = (
         pass_none(Metadata.load)(metadata_directory)
         or Metadata.load()
@@ -210,8 +223,8 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     root = metadata['Name'].replace('.', '/')
     filename = pathlib.Path(wheel_directory) / f'{metadata.id}-py3-none-any.whl'
     with WheelFile(filename, 'w') as zf:
-        for info in wheel_walk(Wheel(root)):
-            zf.write(info.path, arcname=info.name)
+        for info in contents(root):
+            info.write(zf)
         for name, contents in make_wheel_metadata(metadata):
             zf.writestr(f'{metadata.id}.dist-info/{name}', contents)
     return str(filename)
@@ -224,6 +237,9 @@ def build_sdist(sdist_directory, config_settings=None):
         tf.add(pathlib.Path(), filter=SDist(metadata.id))
         tf.addfile(*make_sdist_metadata(metadata))
     return str(filename)
+
+
+build_editable = functools.partial(build_wheel, contents=compose(editables, Wheel))
 
 
 def build_editable(wheel_directory, config_settings=None, metadata_directory=None):
@@ -239,6 +255,10 @@ def build_editable(wheel_directory, config_settings=None, metadata_directory=Non
         for name, contents in make_wheel_metadata(metadata):
             zf.writestr(f'{metadata.id}.dist-info/{name}', contents)
     return str(filename)
+
+
+def editables(filter_: Wheel):
+    yield ZipData(arcname=..., contents=proxy())
 
 
 def proxy():
