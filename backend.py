@@ -24,22 +24,36 @@ from . import discovery
 
 class Filter:
     def __init__(self, name: str):
+        """
+        Create a filter for a package name.
+        """
         self.name = name
 
+    def rename(self, info):
+        """
+        Prefix info.name with self.name.
+
+        Given a ZipInfo-like object, alter the name to begin with self.name.
+        """
+        info.name = (self.name + '/' + info.name).removesuffix('/')
+
     def __call__(self, info):
-        if info.name == '.':
-            info.name = self.name
-            return info
+        # remove any empty paths (`.`)
+        info.name = '/'.join(pathlib.PurePosixPath(info.name).parts)
         ignore_pattern = '|'.join(self.ignored)
-        if re.match(ignore_pattern, info.name.removeprefix('./')):
+        if re.match(ignore_pattern, info.name):
             return
-        info.name = self.name + '/' + info.name.removeprefix('./')
+        self.rename(info)
         return info
 
 
 class SDist(Filter):
     """
     >>> sf = SDist(name="foo")
+
+    The current directory is returned as the name.
+    >>> sf(types.SimpleNamespace(name='.'))
+    namespace(name='foo')
 
     Ignores the .git directory
     >>> sf(types.SimpleNamespace(name='./.git'))
