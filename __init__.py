@@ -9,6 +9,7 @@ __requires__ = [
     'packaging',
     'jaraco.functools',
     'python-dateutil',
+    'jaraco.compat >= 4.1',
 ]
 
 

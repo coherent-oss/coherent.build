@@ -13,10 +13,11 @@ import types
 
 from collections.abc import Mapping
 from email.message import Message
-from jaraco.functools import pass_none
 from typing import Iterable
 
 import packaging
+from jaraco.compat.py38 import r_fix
+from jaraco.functools import pass_none
 from wheel.wheelfile import WheelFile
 
 from . import discovery
@@ -31,9 +32,9 @@ class Filter:
             info.name = self.name
             return info
         ignore_pattern = '|'.join(self.ignored)
-        if re.match(ignore_pattern, info.name.removeprefix('./')):
+        if re.match(ignore_pattern, r_fix(info.name).removeprefix('./')):
             return
-        info.name = self.name + '/' + info.name.removeprefix('./')
+        info.name = self.name + '/' + r_fix(info.name).removeprefix('./')
         return info
 
 

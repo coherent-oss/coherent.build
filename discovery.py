@@ -17,6 +17,7 @@ import jaraco.functools
 import packaging.requirements
 import requests
 import setuptools_scm
+from jaraco.compat.py38 import r_fix
 from jaraco.context import suppress
 from packaging.version import Version
 from pip_run import scripts
@@ -41,7 +42,7 @@ def name_from_vcs():
         encoding='utf-8',
     )
     _, _, tail = url.strip().rpartition('/')
-    return tail.removesuffix('.git')
+    return r_fix(tail).removesuffix('.git')
 
 
 def name_from_path():
