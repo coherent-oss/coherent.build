@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import contextlib
 import functools
 import importlib.metadata
@@ -14,6 +16,7 @@ import types
 from collections.abc import Mapping
 from email.message import Message
 from typing import Iterable
+from typing import Tuple  # Python 3.8
 
 import packaging
 from jaraco.compat.py38 import r_fix
@@ -109,18 +112,18 @@ def wheel_walk(filter_: Wheel):
 
 @functools.singledispatch
 def always_items(
-    values: Mapping | Message | Iterable[tuple[str, str]],
-) -> Iterable[tuple[str, str]]:
+    values: Mapping | Message | Iterable[Tuple[str, str]],
+) -> Iterable[Tuple[str, str]]:
     return values
 
 
 @always_items.register
-def _(values: Mapping) -> Iterable[tuple[str, str]]:
+def _(values: Mapping) -> Iterable[Tuple[str, str]]:
     return values.items()
 
 
 @always_items.register
-def _(values: Message) -> Iterable[tuple[str, str]]:
+def _(values: Message) -> Iterable[Tuple[str, str]]:
     return values._headers
 
 
