@@ -14,10 +14,10 @@ __requires__ = [
 
 
 from .backend import (
-    build_sdist,
-    prepare_metadata,
-    build_wheel,
     build_editable,
+    build_sdist,
+    build_wheel,
+    prepare_metadata,
 )
 
 prepare_metadata_for_build_wheel = prepare_metadata_for_build_editable = (

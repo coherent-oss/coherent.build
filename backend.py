@@ -12,11 +12,12 @@ import tarfile
 import textwrap
 import time
 import types
-
 from collections.abc import Mapping
 from email.message import Message
-from typing import Iterable
-from typing import Tuple  # Python 3.8
+from typing import (
+    Iterable,
+    Tuple,  # Python 3.8
+)
 
 import packaging
 from jaraco.compat.py38 import r_fix

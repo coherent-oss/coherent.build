@@ -4,11 +4,11 @@ import functools
 import itertools
 import json
 import logging
+import mimetypes
 import operator
 import pathlib
 import subprocess
 import types
-import mimetypes
 import urllib.parse
 from collections.abc import Mapping
 
@@ -21,7 +21,6 @@ from jaraco.compat.py38 import r_fix
 from jaraco.context import suppress
 from packaging.version import Version
 from pip_run import scripts
-
 
 log = logging.getLogger(__name__)
 
