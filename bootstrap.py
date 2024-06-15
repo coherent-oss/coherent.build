@@ -4,8 +4,8 @@ import pathlib
 
 
 @contextlib.contextmanager
-def write_pyproject():
-    path = pathlib.Path('pyproject.toml')
+def write_pyproject(target: pathlib.Path = pathlib.Path()):
+    path = target / 'pyproject.toml'
     if path.exists():
         yield
         return
