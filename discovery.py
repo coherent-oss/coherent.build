@@ -155,6 +155,17 @@ def extras_from_deps(deps):
     return functools.reduce(operator.or_, map(extras_from_dep, deps), set())
 
 
+def full_extras(deps):
+    """
+    Ensure that implied extras are included in the extras.
+
+    Ref coherent-oss/coherent.test#5.
+    """
+    deps.add('test')
+    deps.add('doc')
+    return deps
+
+
 def _to_mapping(fame):
     return (dict(zip(fame['columns'], row)) for row in fame['data'])
 

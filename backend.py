@@ -171,7 +171,7 @@ class Metadata(Message):
         deps = list(discovery.read_deps())
         for dep in deps:
             yield 'Requires-Dist', dep
-        for extra in discovery.extras_from_deps(deps):
+        for extra in discovery.full_extras(discovery.extras_from_deps(deps)):
             yield 'Provides-Extra', extra
         yield 'Project-URL', f'Homepage, {discovery.source_url()}'
         yield from discovery.description_from_readme()
