@@ -173,7 +173,7 @@ class Metadata(Message):
             yield 'Requires-Dist', dep
         for extra in discovery.full_extras(discovery.extras_from_deps(deps)):
             yield 'Provides-Extra', extra
-        yield 'Project-URL', f'Homepage, {discovery.source_url()}'
+        yield 'Project-URL', f'Source, {discovery.source_url()}'
         yield from discovery.description_from_readme()
         for classifier in discovery.generate_classifiers():
             yield 'Classifier', classifier
