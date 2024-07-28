@@ -22,6 +22,25 @@ class Import(str):
             )
         )
 
+    def relative_to(self, parent):
+        """
+        >>> Import('.foo').relative_to('coherent')
+        'coherent.foo'
+        >>> Import('..foo').relative_to('coherent')
+        'foo'
+        >>> Import('foo').relative_to('coherent')
+        'foo'
+        >>> Import('..foo.bar').relative_to('coherent._private.mod')
+        'coherent._private.foo.bar'
+        """
+        if not self.startswith('.'):
+            return self
+        p_names = parent.split('.')
+        l_names = self[1:].split('.')
+        blanks = l_names.count('')
+        parents = p_names[:-blanks] if blanks else p_names
+        return '.'.join(parents + l_names[blanks:])
+
 
 @functools.singledispatch
 def get_module_imports(module: pathlib.Path | str) -> Generator[str]:
