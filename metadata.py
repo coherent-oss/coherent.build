@@ -38,9 +38,9 @@ def _(values: email.message.Message) -> Iterable[Tuple[str, str]]:
     return values._headers
 
 
-class Metadata(email.message.Message):
+class Message(email.message.Message):
     """
-    >>> md = Metadata.discover()
+    >>> md = Message.discover()
     >>> md['Summary']
     'A zero-config Python project build backend'
     """
@@ -58,7 +58,7 @@ class Metadata(email.message.Message):
     @property
     def id(self):
         """
-        >>> Metadata(dict(Name='foo.bar', Version='1.0.0')).id
+        >>> Message(dict(Name='foo.bar', Version='1.0.0')).id
         'foo_bar-1.0.0'
         """
         return f"{_normalize(self['Name'])}-{self['Version']}"
@@ -66,7 +66,7 @@ class Metadata(email.message.Message):
     @classmethod
     def discover(cls):
         """
-        >>> md = Metadata.discover()
+        >>> md = Message.discover()
         """
         return cls(cls._discover_fields())
 

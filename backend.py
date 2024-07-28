@@ -18,7 +18,7 @@ from jaraco.compat.py38 import r_fix
 from jaraco.functools import pass_none
 from wheel.wheelfile import WheelFile
 
-from .metadata import Metadata
+from .metadata import Message
 
 
 class Filter:
@@ -93,12 +93,12 @@ class ZipInfo(types.SimpleNamespace):
         super().__init__(path=path, name=zip_name)
 
 
-def make_wheel_metadata(metadata: Metadata):
+def make_wheel_metadata(metadata: Message):
     """
     Yield (name, contents) pairs for all metadata files.
     """
     yield 'METADATA', metadata.render()
-    wheel_md = Metadata({
+    wheel_md = Message({
         'Wheel-Version': '1.0',
         'Generator': 'coherent.build',
         'Root-Is-Purelib': 'true',
@@ -126,7 +126,7 @@ def wheel_walk(filter_: Wheel) -> Iterator[ZipInfo]:
         yield from filter(bool, map(filter_, children))
 
 
-def make_sdist_metadata(metadata: Metadata) -> tarfile.TarInfo:
+def make_sdist_metadata(metadata: Message) -> tarfile.TarInfo:
     info = tarfile.TarInfo(f'{metadata.id}/PKG-INFO')
     file = io.BytesIO(metadata.render().encode('utf-8'))
     info.size = len(file.getbuffer())
@@ -135,7 +135,7 @@ def make_sdist_metadata(metadata: Metadata) -> tarfile.TarInfo:
 
 
 def prepare_metadata(metadata_directory, config_settings=None):
-    metadata = Metadata.load() or Metadata.discover()
+    metadata = Message.load() or Message.discover()
 
     md_root = pathlib.Path(metadata_directory, f'{metadata.id}.dist-info')
     md_root.mkdir()
@@ -146,9 +146,9 @@ def prepare_metadata(metadata_directory, config_settings=None):
 
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     metadata = (
-        pass_none(Metadata.load)(metadata_directory)
-        or Metadata.load()
-        or Metadata.discover()
+        pass_none(Message.load)(metadata_directory)
+        or Message.load()
+        or Message.discover()
     )
     root = metadata['Name'].replace('.', '/')
     filename = pathlib.Path(wheel_directory) / f'{metadata.id}-py3-none-any.whl'
@@ -161,7 +161,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
 
 
 def build_sdist(sdist_directory, config_settings=None):
-    metadata = Metadata.discover()
+    metadata = Message.discover()
     filename = pathlib.Path(sdist_directory) / f'{metadata.id}.tar.gz'
     with tarfile.open(filename, 'w:gz') as tf:
         tf.add(pathlib.Path(), filter=SDist(metadata.id))
@@ -171,9 +171,9 @@ def build_sdist(sdist_directory, config_settings=None):
 
 def build_editable(wheel_directory, config_settings=None, metadata_directory=None):
     metadata = (
-        pass_none(Metadata.load)(metadata_directory)
-        or Metadata.load()
-        or Metadata.discover()
+        pass_none(Message.load)(metadata_directory)
+        or Message.load()
+        or Message.discover()
     )
     root = metadata['Name'].replace('.', '/')
     filename = pathlib.Path(wheel_directory) / f'{metadata.id}-py3-none-any.whl'
