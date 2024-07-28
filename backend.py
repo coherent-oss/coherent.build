@@ -131,7 +131,7 @@ def wheel_walk(filter_: Wheel) -> Iterator[ZipInfo]:
             continue
 
         children = (ZipInfo(path=os.path.join(root, file)) for file in files)
-        yield from filter(None, map(filter_, children))
+        yield from filter(bool, map(filter_, children))
 
 
 @functools.singledispatch
