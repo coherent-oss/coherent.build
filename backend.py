@@ -16,6 +16,7 @@ from collections.abc import Mapping
 from email.message import Message
 from typing import (
     Iterable,
+    Iterator,
     Tuple,  # Python 3.8
 )
 
@@ -28,10 +29,25 @@ from . import discovery
 
 
 class Filter:
+    """
+    Filters tar- and zip-info objects for inclusion in different distributions.
+    """
+
     def __init__(self, name: str):
+        """
+        Initialize the filter with the root of the package ("coherent/build").
+        """
         self.name = name
 
     def __call__(self, info):
+        """
+        Determine disposition for the info object.
+
+        Given an object like a tarfile.TarInfo object, determine if it
+        should be included or filtered. Return None if the object should
+        be omitted. Otherwise, mutate the object to include self.name
+        as a prefix.
+        """
         if info.name == '.':
             info.name = self.name
             return info
@@ -75,6 +91,10 @@ class Wheel(Filter):
 
 
 class ZipInfo(types.SimpleNamespace):
+    """
+    Simulate a compatible interface as a tarfile.TarInfo object.
+    """
+
     def __init__(self, path):
         zip_name = path.replace(os.pathsep, posixpath.sep)
         super().__init__(path=path, name=zip_name)
@@ -100,7 +120,10 @@ def make_wheel_metadata(metadata):
         )
 
 
-def wheel_walk(filter_: Wheel):
+def wheel_walk(filter_: Wheel) -> Iterator[ZipInfo]:
+    """
+    Walk the current directory, applying and honoring the filter for traversal.
+    """
     for root, dirs, files in os.walk('.'):
         zi = ZipInfo(path=root)
         if not filter_(zi):
@@ -115,6 +138,9 @@ def wheel_walk(filter_: Wheel):
 def always_items(
     values: Mapping | Message | Iterable[Tuple[str, str]],
 ) -> Iterable[Tuple[str, str]]:
+    """
+    Always emit an iterable of pairs, even for Mapping or Message.
+    """
     return values
 
 
