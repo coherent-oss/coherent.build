@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import contextlib
-import functools
-import importlib.metadata
 import io
 import os
 import pathlib
@@ -12,20 +10,15 @@ import tarfile
 import textwrap
 import time
 import types
-from collections.abc import Mapping
-from email.message import Message
 from typing import (
-    Iterable,
     Iterator,
-    Tuple,  # Python 3.8
 )
 
-import packaging
 from jaraco.compat.py38 import r_fix
 from jaraco.functools import pass_none
 from wheel.wheelfile import WheelFile
 
-from . import discovery
+from .metadata import Metadata
 
 
 class Filter:
@@ -100,11 +93,7 @@ class ZipInfo(types.SimpleNamespace):
         super().__init__(path=path, name=zip_name)
 
 
-def _normalize(name):
-    return packaging.utils.canonicalize_name(name).replace('-', '_')
-
-
-def make_wheel_metadata(metadata):
+def make_wheel_metadata(metadata: Metadata):
     """
     Yield (name, contents) pairs for all metadata files.
     """
@@ -135,86 +124,6 @@ def wheel_walk(filter_: Wheel) -> Iterator[ZipInfo]:
 
         children = (ZipInfo(path=os.path.join(root, file)) for file in files)
         yield from filter(bool, map(filter_, children))
-
-
-@functools.singledispatch
-def always_items(
-    values: Mapping | Message | Iterable[Tuple[str, str]],
-) -> Iterable[Tuple[str, str]]:
-    """
-    Always emit an iterable of pairs, even for Mapping or Message.
-    """
-    return values
-
-
-@always_items.register
-def _(values: Mapping) -> Iterable[Tuple[str, str]]:
-    return values.items()
-
-
-@always_items.register
-def _(values: Message) -> Iterable[Tuple[str, str]]:
-    return values._headers
-
-
-class Metadata(Message):
-    """
-    >>> md = Metadata.discover()
-    >>> md['Summary']
-    'A zero-config Python project build backend'
-    """
-
-    def __init__(self, values):
-        super().__init__()
-        for item in always_items(values):
-            self.add_header(*item)
-
-    def _description_in_payload(self):
-        if 'Description' in self:
-            self.set_payload(self['Description'])
-            del self['Description']
-
-    @property
-    def id(self):
-        """
-        >>> Metadata(dict(Name='foo.bar', Version='1.0.0')).id
-        'foo_bar-1.0.0'
-        """
-        return f"{_normalize(self['Name'])}-{self['Version']}"
-
-    @classmethod
-    def discover(cls):
-        """
-        >>> md = Metadata.discover()
-        """
-        return cls(cls._discover_fields())
-
-    @staticmethod
-    def _discover_fields():
-        yield 'Metadata-Version', '2.3'
-        yield 'Name', discovery.best_name()
-        yield 'Version', discovery.version_from_vcs()
-        yield 'Author-Email', discovery.author_from_vcs()
-        yield 'Summary', discovery.summary_from_github()
-        yield 'Requires-Python', discovery.python_requires_supported()
-        deps = list(discovery.read_deps())
-        for dep in deps:
-            yield 'Requires-Dist', dep
-        for extra in discovery.full_extras(discovery.extras_from_deps(deps)):
-            yield 'Provides-Extra', extra
-        yield 'Project-URL', f'Source, {discovery.source_url()}'
-        yield from discovery.description_from_readme()
-        for classifier in discovery.generate_classifiers():
-            yield 'Classifier', classifier
-
-    @classmethod
-    def load(cls, info: str | pathlib.Path = pathlib.Path()):
-        md = importlib.metadata.PathDistribution(pathlib.Path(info)).metadata
-        return (md or None) and cls(md)
-
-    def render(self):
-        self._description_in_payload()
-        return str(self)
 
 
 def make_sdist_metadata(metadata: Metadata) -> tarfile.TarInfo:
