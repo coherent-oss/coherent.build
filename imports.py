@@ -8,25 +8,43 @@ import sys
 from typing import Generator
 
 
+def rel_prefix(node):
+    return '.' * getattr(node, 'level', 0)
+
+
 @functools.singledispatch
 def get_module_imports(module: pathlib.Path | str) -> Generator[str]:
-    """
+    r"""
     Parse a Python module to extract imported names.
 
-    >>> 'ast' in set(get_module_imports(pathlib.Path(__file__)))
-    True
+    >>> list(get_module_imports('import ast\nimport requests'))
+    ['ast', 'requests']
 
-    Excludes relative imports.
+    >>> list(get_module_imports('from foo import bar'))
+    ['foo.bar']
 
-    >>> list(get_module_imports('from . import foo'))
-    []
+    Handles relative imports.
+
+    >>> list(get_module_imports('from .. import foo'))
+    ['..foo']
+
+    >>> list(get_module_imports('from .foo import bar'))
+    ['.foo.bar']
+
     """
     return (
-        '.'.join(filter(bool, [getattr(node, 'module', None), alias.name]))
+        rel_prefix(node)
+        + '.'.join(
+            filter(
+                bool,
+                [
+                    getattr(node, 'module', None),
+                    alias.name,
+                ],
+            ),
+        )
         for node in ast.walk(ast.parse(module))
-        if isinstance(node, ast.Import)
-        or isinstance(node, ast.ImportFrom)
-        and not node.level
+        if isinstance(node, ast.Import) or isinstance(node, ast.ImportFrom)
         for alias in node.names
     )
 
