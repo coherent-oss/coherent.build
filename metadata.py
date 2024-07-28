@@ -1,3 +1,4 @@
+import contextlib
 import email.message
 import functools
 import importlib.metadata
@@ -96,3 +97,21 @@ class Message(email.message.Message):
     def render(self):
         self._description_in_payload()
         return str(self)
+
+    def render_wheel(self):
+        """
+        Yield (name, contents) pairs for all metadata files.
+        """
+        yield 'METADATA', self.render()
+        wheel_md = Message({
+            'Wheel-Version': '1.0',
+            'Generator': 'coherent.build',
+            'Root-Is-Purelib': 'true',
+            'Tag': 'py3-none-any',
+        })
+        yield 'WHEEL', wheel_md.render()
+        with contextlib.suppress(FileNotFoundError):
+            yield (
+                'entry_points.txt',
+                pathlib.Path('(meta)/entry_points.txt').read_text(),
+            )

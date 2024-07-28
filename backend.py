@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import contextlib
 import io
 import os
 import pathlib
@@ -93,25 +92,6 @@ class ZipInfo(types.SimpleNamespace):
         super().__init__(path=path, name=zip_name)
 
 
-def make_wheel_metadata(metadata: Message):
-    """
-    Yield (name, contents) pairs for all metadata files.
-    """
-    yield 'METADATA', metadata.render()
-    wheel_md = Message({
-        'Wheel-Version': '1.0',
-        'Generator': 'coherent.build',
-        'Root-Is-Purelib': 'true',
-        'Tag': 'py3-none-any',
-    })
-    yield 'WHEEL', wheel_md.render()
-    with contextlib.suppress(FileNotFoundError):
-        yield (
-            'entry_points.txt',
-            pathlib.Path('(meta)/entry_points.txt').read_text(),
-        )
-
-
 def wheel_walk(filter_: Wheel) -> Iterator[ZipInfo]:
     """
     Walk the current directory, applying and honoring the filter for traversal.
@@ -139,7 +119,7 @@ def prepare_metadata(metadata_directory, config_settings=None):
 
     md_root = pathlib.Path(metadata_directory, f'{metadata.id}.dist-info')
     md_root.mkdir()
-    for name, contents in make_wheel_metadata(metadata):
+    for name, contents in metadata.render_wheel():
         md_root.joinpath(name).write_text(contents)
     return md_root.name
 
@@ -155,7 +135,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     with WheelFile(filename, 'w') as zf:
         for info in wheel_walk(Wheel(root)):
             zf.write(info.path, arcname=info.name)
-        for name, contents in make_wheel_metadata(metadata):
+        for name, contents in metadata.render_wheel():
             zf.writestr(f'{metadata.id}.dist-info/{name}', contents)
     return str(filename)
 
@@ -179,7 +159,7 @@ def build_editable(wheel_directory, config_settings=None, metadata_directory=Non
     filename = pathlib.Path(wheel_directory) / f'{metadata.id}-py3-none-any.whl'
     with WheelFile(filename, 'w') as zf:
         zf.writestr(f'{root}/__init__.py', proxy())
-        for name, contents in make_wheel_metadata(metadata):
+        for name, contents in metadata.render_wheel():
             zf.writestr(f'{metadata.id}.dist-info/{name}', contents)
     return str(filename)
 
