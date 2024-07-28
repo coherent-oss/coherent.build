@@ -44,9 +44,6 @@ class Import(str):
         parents = p_names[:-blanks] if blanks else p_names
         return '.'.join(parents + l_names[blanks:])
 
-    CPE = jaraco.context.ExceptionTrap(subprocess.CalledProcessError)
-
-    @CPE.passes
     def builtin(self):
         """
         Is this import built-in (part of the stdandard library)?
@@ -63,7 +60,14 @@ class Import(str):
         >>> Import('pip').builtin()
         False
         """
-        top_level_name = self.split('.')[0]
+        return self._check_builtin(self.split('.')[0])
+
+    CPE = jaraco.context.ExceptionTrap(subprocess.CalledProcessError)
+
+    @staticmethod
+    @functools.lru_cache
+    @CPE.passes
+    def _check_builtin(top_level_name):
         cmd = [sys.executable, '-S', '-c', f'import {top_level_name}']
         subprocess.check_call(cmd, env={}, stderr=subprocess.DEVNULL)
 
