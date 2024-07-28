@@ -12,6 +12,12 @@ def rel_prefix(node):
     return '.' * getattr(node, 'level', 0)
 
 
+def format(node, alias):
+    return rel_prefix(node) + '.'.join(
+        filter(bool, [getattr(node, 'module', None), alias.name]),
+    )
+
+
 @functools.singledispatch
 def get_module_imports(module: pathlib.Path | str) -> Generator[str]:
     r"""
@@ -33,16 +39,7 @@ def get_module_imports(module: pathlib.Path | str) -> Generator[str]:
 
     """
     return (
-        rel_prefix(node)
-        + '.'.join(
-            filter(
-                bool,
-                [
-                    getattr(node, 'module', None),
-                    alias.name,
-                ],
-            ),
-        )
+        format(node, alias)
         for node in ast.walk(ast.parse(module))
         if isinstance(node, ast.Import) or isinstance(node, ast.ImportFrom)
         for alias in node.names
