@@ -1,8 +1,8 @@
+import email.message
 import functools
 import importlib.metadata
 import pathlib
 from collections.abc import Mapping
-from email.message import Message
 
 from typing import (
     Iterable,
@@ -20,7 +20,7 @@ def _normalize(name):
 
 @functools.singledispatch
 def always_items(
-    values: Mapping | Message | Iterable[Tuple[str, str]],
+    values: Mapping | email.message.Message | Iterable[Tuple[str, str]],
 ) -> Iterable[Tuple[str, str]]:
     """
     Always emit an iterable of pairs, even for Mapping or Message.
@@ -34,11 +34,11 @@ def _(values: Mapping) -> Iterable[Tuple[str, str]]:
 
 
 @always_items.register
-def _(values: Message) -> Iterable[Tuple[str, str]]:
+def _(values: email.message.Message) -> Iterable[Tuple[str, str]]:
     return values._headers
 
 
-class Metadata(Message):
+class Metadata(email.message.Message):
     """
     >>> md = Metadata.discover()
     >>> md['Summary']
