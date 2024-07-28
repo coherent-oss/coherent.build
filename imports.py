@@ -101,4 +101,8 @@ def _(module: pathlib.Path):
     return get_module_imports(module.read_text())
 
 
-__name__ == '__main__' and print(list(get_module_imports(pathlib.Path(sys.argv[1]))))
+def print_module_imports(path: pathlib.Path):
+    print(list(name for name in get_module_imports(path) if not name.builtin()))
+
+
+__name__ == '__main__' and print_module_imports(pathlib.Path(sys.argv[1]))
