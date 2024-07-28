@@ -12,8 +12,8 @@ import types
 import urllib.parse
 from collections.abc import Mapping
 
-import dateutil.parser
 import jaraco.functools
+import jaraco.vcs
 import packaging.requirements
 import requests
 import setuptools_scm
@@ -286,15 +286,7 @@ def description_from_readme():
 
 def age_of_repo():
     """Return the age of the repo."""
-    proc = subprocess.Popen(
-        ['git', 'log', '--reverse', '--pretty=%ad', '--date', 'iso'],
-        stdout=subprocess.PIPE,
-        text=True,
-        encoding='utf-8',
-    )
-    first_line = proc.stdout.readline().strip()
-    proc.terminate()
-    return datetime.datetime.now(datetime.UTC) - dateutil.parser.parse(first_line)
+    return jaraco.vcs.repo().age()
 
 
 def generate_classifiers():

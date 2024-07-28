@@ -8,9 +8,9 @@ __requires__ = [
     'requests',
     'packaging',
     'jaraco.functools',
-    'python-dateutil',
     'jaraco.compat >= 4.1',
-    'importlib_resources; python_version < "3.12"'
+    'importlib_resources; python_version < "3.12"',
+    'jaraco.vcs',
 ]
 
 
