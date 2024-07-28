@@ -105,6 +105,9 @@ def _normalize(name):
 
 
 def make_wheel_metadata(metadata):
+    """
+    Yield (name, contents) pairs for all metadata files.
+    """
     yield 'METADATA', metadata.render()
     wheel_md = Metadata({
         'Wheel-Version': '1.0',
@@ -214,7 +217,7 @@ class Metadata(Message):
         return str(self)
 
 
-def make_sdist_metadata(metadata) -> tarfile.TarInfo:
+def make_sdist_metadata(metadata: Metadata) -> tarfile.TarInfo:
     info = tarfile.TarInfo(f'{metadata.id}/PKG-INFO')
     file = io.BytesIO(metadata.render().encode('utf-8'))
     info.size = len(file.getbuffer())
