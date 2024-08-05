@@ -169,10 +169,10 @@ def proxy():
         __path__ = [{os.getcwd()!r}]
         __file__ = __path__[0] + '/__init__.py'
         try:
-            strm = open(__file__)
+            strm = open(__file__, 'rb')
         except FileNotFoundError:
             pass
         else:
             with strm:
-                exec(strm.read())
+                exec(compile(strm.read(), __file__, 'exec'))
         """).lstrip()
