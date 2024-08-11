@@ -2,10 +2,15 @@
 Resolve the top-level packages supplied by the most popular distributions.
 """
 
-__requires__ = ['requests_toolbelt', 'autocommand']
+__requires__ = [
+    'requests_toolbelt',
+    'autocommand',
+    'zipp>=3.20',
+]
 
 import functools
 import io
+import importlib.metadata
 import itertools
 import json
 import logging
@@ -13,12 +18,12 @@ import operator
 import pathlib
 import re
 import sys
-import zipfile
+from zipp.compat.overlay import zipfile
 
 from typing import Iterator
 
 import autocommand
-from more_itertools import first
+from more_itertools import first, one
 from requests_toolbelt import sessions
 
 session = sessions.BaseUrlSession('https://pypi.python.org/pypi/')
@@ -52,8 +57,16 @@ class Distribution(str):
     def roots(self):
         return find_roots(*find_names(self.wheel))
 
+    def __json__(self):
+        return dict(norm_name=self, name=self.name, roots=list(self.roots))
+
+    @property
+    def name(self):
+        info = one(self.wheel.glob('*.dist-info'))
+        return importlib.metadata.PathDistribution(info).name
+
     def report(self):
-        json.dump({str(self): list(self.roots)}, sys.stdout)
+        json.dump(self.__json__(), sys.stdout)
         print(flush=True)
 
 
