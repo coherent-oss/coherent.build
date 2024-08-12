@@ -6,15 +6,20 @@ __requires__ = [
     'requests_toolbelt',
     'autocommand',
     'zipp>=3.20',
+    'jaraco.mongodb',
+    'keyring',
+    'tempora',
 ]
 
 import functools
+import getpass
 import io
 import importlib.metadata
 import itertools
 import json
 import logging
 import operator
+import os
 import pathlib
 import re
 import sys
@@ -23,6 +28,9 @@ from zipp.compat.overlay import zipfile
 from typing import Iterator
 
 import autocommand
+import jaraco.mongodb.helper
+import keyring
+import tempora.utc
 from more_itertools import first, one
 from requests_toolbelt import sessions
 
@@ -30,6 +38,18 @@ session = sessions.BaseUrlSession('https://pypi.python.org/pypi/')
 log = logging.getLogger(__name__)
 
 url = 'https://hugovk.github.io/top-pypi-packages/top-pypi-packages-30-days.min.json'
+
+
+@functools.cache
+def db():
+    username = os.environ.get('DB_USER') or getpass.getuser()
+    cluster = os.environ.get('DB_CLUSTER') or 'cluster0.acvlhai.mongodb.net'
+    password = keyring.get_password(cluster, username)
+    uri = f'mongodb+srv://{username}:{password}@{cluster}/pypi'
+    db = jaraco.mongodb.helper.connect_db(uri)
+    db.distributions.create_index([('created', 1)], expireAfterSeconds=86400 * 30)
+    db.distributions.create_index([('roots', 1)])
+    return db.distributions
 
 
 class Distribution(str):
@@ -53,15 +73,25 @@ class Distribution(str):
             cls, map(operator.itemgetter('project'), session.get(url).json()['rows'])
         )
 
-    @property
-    def roots(self):
-        return find_roots(*find_names(self.wheel))
+    def load(self):
+        found = db().find_one(dict(norm_name=self))
+        doc = found or self.from_wheel()
+        vars(self).update(doc)
+        return found
+
+    def save(self):
+        db().insert_one(dict(self.__json__(), created=tempora.utc.now()))
+
+    def from_wheel(self):
+        return dict(
+            roots=list(find_roots(*find_names(self.wheel))),
+            name=self._get_name(),
+        )
 
     def __json__(self):
-        return dict(norm_name=self, name=self.name, roots=list(self.roots))
+        return dict(norm_name=self, name=self.name, roots=self.roots)
 
-    @property
-    def name(self):
+    def _get_name(self):
         info = one(self.wheel.glob('*.dist-info'))
         return importlib.metadata.PathDistribution(info).name
 
@@ -177,6 +207,7 @@ def run(include: re.compile = re.compile('.*')):
     logging.basicConfig()
     for dist in filter(include.match, Distribution.query()):
         try:
+            dist.load() or dist.save()
             dist.report()
         except Exception as exc:
             log.exception(f"{exc} loading {dist}")
