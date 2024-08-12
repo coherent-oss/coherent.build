@@ -72,12 +72,12 @@ class Distribution(str):
 
 def top(package_name: str) -> str:
     """
-    >>> top(foo.bar')
+    >>> top('foo.bar')
     'foo'
-    >>> top(foo.bar.baz')
+    >>> top('foo.bar.baz')
     'foo'
     >>> top('foo')
-    None
+    ''
     """
     top, sep, name = package_name.partition('.')
     return sep and top
@@ -85,12 +85,12 @@ def top(package_name: str) -> str:
 
 def parent(package_name: str) -> str:
     """
-    >>> parent(foo.bar')
+    >>> parent('foo.bar')
     'foo'
-    >>> parent(foo.bar.baz')
+    >>> parent('foo.bar.baz')
     'foo.bar'
     >>> parent('foo')
-    None
+    ''
     """
     parent, sep, name = package_name.rpartition('.')
     return sep and parent
