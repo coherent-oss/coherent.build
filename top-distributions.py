@@ -117,7 +117,30 @@ def find_packages(wheel: zipfile.Path):
     return (
         init.parent.at.rstrip('/').replace('/', '.')
         for init in wheel.glob('**/__init__.py')
+        if not is_namespace(init)
     )
+
+
+ns_pattern = re.compile(
+    r'import.*(pkg_resources|pkgutil).*'
+    r'(\.declare_namespace\(__name__\)|\.extend_path\(__path__, __name__\))',
+    flags=re.DOTALL,
+)
+
+
+def is_namespace(init: zipfile.Path) -> bool:
+    r"""
+    Is the init file one of the namespace package declarations.
+
+    >>> pkgutil = "__path__ = __import__('pkgutil').extend_path(__path__, __name__)"
+    >>> bool(ns_pattern.search(pkgutil))
+    True
+    >>> pkg_res = "import pkg_resources\npkg_resources.declare_namespace(__name__)"
+    >>> bool(ns_pattern.search(pkg_res))
+    True
+    """
+    text = init.read_text(encoding='utf-8')
+    return len(text) < 2**10 and ns_pattern.search(text)
 
 
 def find_modules(wheel: zipfile.Path):
@@ -130,6 +153,7 @@ def find_modules(wheel: zipfile.Path):
             wheel.glob('**/*.py'),
             wheel.glob('*.py'),
         )
+        if modfile.name != '__init__.py'
     )
 
 
