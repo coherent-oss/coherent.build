@@ -2,15 +2,6 @@
 Resolve the top-level packages supplied by the most popular distributions.
 """
 
-__requires__ = [
-    'requests_toolbelt',
-    'autocommand',
-    'zipp>=3.20',
-    'jaraco.mongodb',
-    'keyring',
-    'tempora',
-]
-
 import functools
 import getpass
 import io
@@ -27,7 +18,6 @@ from zipp.compat.overlay import zipfile
 
 from typing import Iterator
 
-import autocommand
 import jaraco.mongodb.helper
 import keyring
 import tempora.utc
@@ -218,14 +208,3 @@ def find_names(wheel):
 class Filter(str):
     def __call__(self, dist: Distribution):
         return re.match(self.replace())
-
-
-@autocommand.autocommand(__name__)
-def run(include: re.compile = re.compile('.*')):
-    logging.basicConfig()
-    for dist in filter(include.match, Distribution.query()):
-        try:
-            dist.load() or dist.save()
-            dist.report()
-        except Exception as exc:
-            log.exception(f"{exc} loading {dist}")

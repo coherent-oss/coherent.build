@@ -11,6 +11,12 @@ __requires__ = [
     'jaraco.compat >= 4.1',
     'importlib_resources; python_version < "3.12"',
     'jaraco.vcs',
+    'requests_toolbelt',
+    'autocommand',
+    'zipp>=3.20',
+    'jaraco.mongodb',
+    'keyring',
+    'tempora',
 ]
 
 
