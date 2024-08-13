@@ -22,6 +22,9 @@ from jaraco.context import suppress
 from packaging.version import Version
 from pip_run import scripts
 
+from . import imports
+from . import pypi
+
 log = logging.getLogger(__name__)
 
 mimetypes.add_type('text/plain', '', strict=True)
@@ -125,6 +128,17 @@ def read_deps():
     Read deps from ``__init__.py``.
     """
     return scripts.DepsReader.search(['__init__.py'])
+
+
+def inferred_deps():
+    """
+    Infer deps from module imports.
+    """
+    return [
+        pypi.distribution_for(imp.relative_to(best_name()))
+        for module in pathlib.Path().glob('*.py')
+        for imp in imports.get_module_imports(module)
+    ]
 
 
 def extras_from_dep(dep):
