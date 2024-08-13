@@ -203,8 +203,3 @@ def find_names(wheel):
     return filter(
         importable, itertools.chain(find_packages(wheel), find_modules(wheel))
     )
-
-
-class Filter(str):
-    def __call__(self, dist: Distribution):
-        return re.match(self.replace())
