@@ -63,6 +63,13 @@ def create_anonymous_user():
     )
 
 
+def distribution_for(import_name):
+    """
+    Resolve a distribution name from an import name.
+    """
+    return client().distributions.find_one({'roots': import_name})['name']
+
+
 class Distribution(str):
     @functools.cached_property
     def wheel(self) -> zipfile.Path:
