@@ -8,6 +8,7 @@ import mimetypes
 import operator
 import pathlib
 import subprocess
+import sys
 import types
 import urllib.parse
 from collections.abc import Mapping
@@ -134,11 +135,16 @@ def inferred_deps():
     """
     Infer deps from module imports.
     """
-    return [
-        pypi.distribution_for(imp.relative_to(best_name()))
+    names = [
+        imp.relative_to(best_name())
         for module in pathlib.Path().glob('*.py')
         for imp in imports.get_module_imports(module)
     ]
+    for name in names:
+        try:
+            yield pypi.distribution_for(name)
+        except Exception:
+            print("Error resolving import", name, file=sys.stderr)
 
 
 def extras_from_dep(dep):
