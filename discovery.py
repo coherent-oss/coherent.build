@@ -139,6 +139,8 @@ def inferred_deps():
         imp.relative_to(best_name())
         for module in pathlib.Path().glob('*.py')
         for imp in imports.get_module_imports(module)
+        if not imp.builtin()
+        and not imp.relative_to(best_name()).startswith(best_name())
     ]
     for name in names:
         try:
