@@ -222,6 +222,3 @@ def run(include: re.compile = re.compile('.*')):
             dist.report()
         except Exception as exc:
             log.exception(f"{exc} loading {dist}")
-
-
-__name__ == "__main__" and run()
