@@ -41,15 +41,26 @@ url = 'https://hugovk.github.io/top-pypi-packages/top-pypi-packages-30-days.min.
 
 
 @functools.cache
-def db():
-    username = os.environ.get('DB_USER') or getpass.getuser()
-    cluster = os.environ.get('DB_CLUSTER') or 'cluster0.acvlhai.mongodb.net'
-    password = keyring.get_password(cluster, username)
-    uri = f'mongodb+srv://{username}:{password}@{cluster}/pypi'
-    db = jaraco.mongodb.helper.connect_db(uri)
+def store():
+    db = client(getpass.getuser())
     db.distributions.create_index([('created', 1)], expireAfterSeconds=86400 * 30)
     db.distributions.create_index([('roots', 1)])
     return db.distributions
+
+
+@functools.cache
+def client(username=None):
+    username = username or os.environ.get('DB_USER') or 'anonymous'
+    cluster = os.environ.get('DB_CLUSTER') or 'cluster0.acvlhai.mongodb.net'
+    password = keyring.get_password(cluster, username) or 'coherent.build'
+    uri = f'mongodb+srv://{username}:{password}@{cluster}/pypi'
+    return jaraco.mongodb.helper.connect_db(uri)
+
+
+def create_anonymous_user():
+    client(getpass.getuser()).command(
+        "createUser", "anonymous", pwd="coherent.build", roles=["read"]
+    )
 
 
 class Distribution(str):
@@ -74,13 +85,13 @@ class Distribution(str):
         )
 
     def load(self):
-        found = db().find_one(dict(norm_name=self))
+        found = store().find_one(dict(norm_name=self))
         doc = found or self.from_wheel()
         vars(self).update(doc)
         return found
 
     def save(self):
-        db().insert_one(dict(self.__json__(), created=tempora.utc.now()))
+        store().insert_one(dict(self.__json__(), created=tempora.utc.now()))
 
     def from_wheel(self):
         return dict(
