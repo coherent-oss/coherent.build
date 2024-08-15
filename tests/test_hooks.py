@@ -11,6 +11,6 @@ def test_prepared_metadata(tmp_path, monkeypatch):
     md_dir = md_root / md_name
     wheel_root = tmp_path / 'wheel-build'
     wheel_root.mkdir()
-    # ensure Metadata.discover is not called
-    monkeypatch.delattr(coherent.build.backend.Metadata, 'discover')
+    # ensure Message.discover is not called
+    monkeypatch.delattr(coherent.build.metadata.Message, 'discover')
     coherent.build.build_wheel(wheel_root, metadata_directory=md_dir)
