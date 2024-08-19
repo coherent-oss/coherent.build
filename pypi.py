@@ -53,11 +53,29 @@ def create_anonymous_user():
     )
 
 
+def all_names(module):
+    """
+    Given a module name, yield all possible roots.
+
+    >>> list(all_names('foo.bar.baz'))
+    ['foo.bar.baz', 'foo.bar', 'foo']
+    """
+    yield module
+    parent, _, _ = module.rpartition('.')
+    if not parent:
+        return
+    yield from all_names(parent)
+
+
+def is_root(module):
+    return client().distributions.find_one({'roots': module})
+
+
 def distribution_for(import_name):
     """
     Resolve a distribution name from an import name.
     """
-    return client().distributions.find_one({'roots': import_name})['name']
+    return next(filter(bool, map(is_root, all_names(import_name))))['name']
 
 
 class Distribution(str):
