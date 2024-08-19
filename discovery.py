@@ -131,13 +131,30 @@ def read_deps():
     return scripts.DepsReader.search(['__init__.py'])
 
 
+def source_files():
+    """
+    Return all files in the source distribution.
+
+    >>> list(source_files())
+    [...Path('discovery.py')...]
+    """
+    return (
+        pathlib.Path(path)
+        for path in subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
+    )
+
+
+def is_python(path: pathlib.Path) -> bool:
+    return path.suffix == '.py'
+
+
 def inferred_deps():
     """
     Infer deps from module imports.
     """
     names = [
         imp.relative_to(best_name())
-        for module in pathlib.Path().glob('*.py')
+        for module in filter(is_python, source_files())
         for imp in imports.get_module_imports(module)
         if not imp.builtin()
         and not imp.relative_to(best_name()).startswith(best_name())
