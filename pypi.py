@@ -39,6 +39,9 @@ top_8k = 'https://hugovk.github.io/top-pypi-packages/top-pypi-packages-30-days.m
 
 @functools.cache
 def store():
+    """
+    An authenticated, read-write connection to the collection.
+    """
     db = client(getpass.getuser())
     db.distributions.create_index([('roots', 1)])
     db.distributions.create_index([('id', 1)])
@@ -47,6 +50,11 @@ def store():
 
 @functools.cache
 def client(username=None):
+    """
+    A client to the database.
+
+    Defaults to an anonymous, read-only connection if no username is supplied.
+    """
     username = username or os.environ.get('DB_USER') or 'anonymous'
     cluster = os.environ.get('DB_CLUSTER') or 'cluster0.acvlhai.mongodb.net'
     password = keyring.get_password(cluster, username) or 'coherent.build'
