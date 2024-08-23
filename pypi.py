@@ -37,6 +37,7 @@ top_8k = 'https://hugovk.github.io/top-pypi-packages/top-pypi-packages-30-days.m
 def store():
     db = client(getpass.getuser())
     db.distributions.create_index([('roots', 1)])
+    db.distributions.create_index([('id', 1)])
     return db.distributions
 
 
