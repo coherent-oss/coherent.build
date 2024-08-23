@@ -14,6 +14,6 @@ def run(include: re.compile = re.compile('.*'), url=pypi.top_8k):
     for dist in filter(include.match, pypi.Distribution.query(url=url)):
         try:
             dist.load() or dist.save()
-            dist.report()
+            print(dist)
         except Exception as exc:
             log.error(f"{exc} loading {dist}")

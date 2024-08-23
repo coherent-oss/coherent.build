@@ -13,7 +13,6 @@ import operator
 import os
 import pathlib
 import re
-import sys
 from zipp.compat.overlay import zipfile
 
 from typing import Iterator
@@ -87,7 +86,9 @@ class Distribution(str):
         """
         Return the wheel.
         """
-        info = session.get(f'{self}/json').json()
+        resp = session.get(f'{super().__str__()}/json')
+        resp.raise_for_status()
+        info = resp.json()
         if 'urls' not in info:
             raise RuntimeError("No URLs")
         try:
@@ -129,9 +130,8 @@ class Distribution(str):
         info = one(self.wheel.glob('*.dist-info'))
         return importlib.metadata.PathDistribution(info).name
 
-    def report(self):
-        json.dump(self.__json__(), sys.stdout)
-        print(flush=True)
+    def __str__(self):
+        return json.dumps(self.__json__())
 
 
 def top(package_name: str) -> str:
