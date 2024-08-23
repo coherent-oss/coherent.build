@@ -113,7 +113,7 @@ class Distribution(str):
         return found
 
     def save(self):
-        store().insert_one(dict(self.__json__(), created=tempora.utc.now()))
+        store().insert_one(dict(self.__json__(), updated=tempora.utc.now()))
 
     def from_wheel(self):
         return dict(
