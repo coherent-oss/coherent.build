@@ -17,6 +17,7 @@ from zipp.compat.overlay import zipfile
 
 from typing import Iterator
 
+import jaraco.collections
 import jaraco.mongodb.helper
 import keyring
 import tempora.utc
@@ -90,7 +91,7 @@ class Distribution(str):
         resp.raise_for_status()
         info = resp.json()
         if 'urls' not in info:
-            raise RuntimeError("No URLs")
+            raise ValueError("No dists")
         try:
             match = first(
                 url for url in info['urls'] if url['filename'].endswith('.whl')
@@ -111,20 +112,24 @@ class Distribution(str):
     def load(self):
         found = store().find_one(dict(id=self))
         doc = found or self.from_wheel()
-        vars(self).update(doc)
+        keys = ['name', 'roots', 'error']
+        vars(self).update(jaraco.collections.Projection(keys, doc))
         return found
 
     def save(self):
         store().insert_one(dict(self.__json__(), updated=tempora.utc.now()))
 
     def from_wheel(self):
-        return dict(
-            roots=list(find_roots(*find_names(self.wheel))),
-            name=self._get_name(),
-        )
+        try:
+            return dict(
+                name=self._get_name(),
+                roots=list(find_roots(*find_names(self.wheel))),
+            )
+        except ValueError as exc:
+            return dict(error=str(exc))
 
     def __json__(self):
-        return dict(id=self, name=self.name, roots=self.roots)
+        return dict(id=self, **vars(self))
 
     def _get_name(self):
         info = one(self.wheel.glob('*.dist-info'))
