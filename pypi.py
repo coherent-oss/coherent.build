@@ -136,7 +136,7 @@ class Distribution(str):
                 name=self._get_name(),
                 roots=list(find_roots(*find_names(self.wheel))),
             )
-        except (ValueError, HTTPError) as exc:
+        except (ValueError, HTTPError, KeyError) as exc:
             return dict(error=str(exc))
 
     def __json__(self):
