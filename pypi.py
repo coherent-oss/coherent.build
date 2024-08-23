@@ -21,6 +21,8 @@ import jaraco.collections
 import jaraco.mongodb.helper
 import keyring
 import tempora.utc
+from jaraco.context import suppress
+from jaraco.functools import apply
 from more_itertools import first, one
 from requests.exceptions import HTTPError
 from requests_toolbelt import sessions
@@ -198,6 +200,8 @@ ns_pattern = re.compile(
 )
 
 
+@apply(bool)
+@suppress(UnicodeDecodeError)
 def is_namespace(init: zipfile.Path) -> bool:
     r"""
     Is the init file one of the namespace package declarations.
@@ -208,6 +212,14 @@ def is_namespace(init: zipfile.Path) -> bool:
     >>> pkg_res = "import pkg_resources\npkg_resources.declare_namespace(__name__)"
     >>> bool(ns_pattern.search(pkg_res))
     True
+
+    In case the file cannot be decoded as UTF-8, return False.
+
+    >>> invalid = getfixture('tmp_path') / 'invalid'
+    >>> empty_rar = b'Rar!\x1a\x07\x01\x00\xc1\xdf_V\x03\x01\x04\x00\x1dwVQ\x03\x05\x04\x00'
+    >>> _ = invalid.write_bytes(empty_rar)
+    >>> is_namespace(invalid)
+    False
     """
     text = init.read_text(encoding='utf-8')
     return len(text) < 2**10 and ns_pattern.search(text)
