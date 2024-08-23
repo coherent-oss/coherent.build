@@ -112,8 +112,7 @@ class Distribution(str):
     def load(self):
         found = store().find_one(dict(id=self))
         doc = found or self.from_wheel()
-        keys = ['name', 'roots', 'error']
-        vars(self).update(jaraco.collections.Projection(keys, doc))
+        vars(self).update(doc)
         return found
 
     def save(self):
@@ -129,7 +128,8 @@ class Distribution(str):
             return dict(error=str(exc))
 
     def __json__(self):
-        return dict(id=self, **vars(self))
+        keys = ['name', 'roots', 'error']
+        return dict(id=self, **jaraco.collections.Projection(keys, vars(self)))
 
     def _get_name(self):
         info = one(self.wheel.glob('*.dist-info'))
