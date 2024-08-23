@@ -18,6 +18,7 @@ __requires__ = [
     'keyring',
     'tempora',
     'requests-file',
+    'tqdm',
 ]
 
 
