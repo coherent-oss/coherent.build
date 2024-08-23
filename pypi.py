@@ -13,6 +13,7 @@ import operator
 import os
 import pathlib
 import re
+import tokenize
 from zipp.compat.overlay import zipfile
 
 from typing import Iterator
@@ -201,7 +202,7 @@ ns_pattern = re.compile(
 
 
 @apply(bool)
-@suppress(UnicodeDecodeError)
+@suppress(SyntaxError)
 def is_namespace(init: zipfile.Path) -> bool:
     r"""
     Is the init file one of the namespace package declarations.
@@ -213,15 +214,23 @@ def is_namespace(init: zipfile.Path) -> bool:
     >>> bool(ns_pattern.search(pkg_res))
     True
 
-    In case the file cannot be decoded as UTF-8, return False.
+    In case the file cannot be parsed, return False.
 
     >>> invalid = getfixture('tmp_path') / 'invalid'
     >>> empty_rar = b'Rar!\x1a\x07\x01\x00\xc1\xdf_V\x03\x01\x04\x00\x1dwVQ\x03\x05\x04\x00'
     >>> _ = invalid.write_bytes(empty_rar)
     >>> is_namespace(invalid)
     False
+
+    The encoding should be honored.
+
+    >>> latin1 = getfixture('tmp_path') / 'latin1'
+    >>> _ = latin1.write_text('Æ', encoding='latin1')
+    >>> is_namespace(latin1)
+    False
     """
-    text = init.read_text(encoding='utf-8')
+    with tokenize.open(init) as strm:
+        text = strm.read()
     return len(text) < 2**10 and ns_pattern.search(text)
 
 
