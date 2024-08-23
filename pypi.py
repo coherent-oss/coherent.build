@@ -107,7 +107,7 @@ class Distribution(str):
         )
 
     def load(self):
-        found = store().find_one(dict(norm_name=self))
+        found = store().find_one(dict(id=self))
         doc = found or self.from_wheel()
         vars(self).update(doc)
         return found
@@ -122,7 +122,7 @@ class Distribution(str):
         )
 
     def __json__(self):
-        return dict(norm_name=self, name=self.name, roots=self.roots)
+        return dict(id=self, name=self.name, roots=self.roots)
 
     def _get_name(self):
         info = one(self.wheel.glob('*.dist-info'))
