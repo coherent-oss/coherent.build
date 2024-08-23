@@ -208,7 +208,8 @@ def is_namespace(init: zipfile.Path) -> bool:
     Is the init file one of the namespace package declarations.
 
     >>> pkgutil = getfixture('tmp_path') / 'pkgutil'
-    >>> _ = pkgutil.write_text("__path__ = __import__('pkgutil').extend_path(__path__, __name__)")
+    >>> pkgutil_decl = "__path__ = __import__('pkgutil').extend_path(__path__, __name__)"
+    >>> _ = pkgutil.write_text(pkgutil_decl)
     >>> is_namespace(pkgutil)
     True
 
@@ -228,9 +229,13 @@ def is_namespace(init: zipfile.Path) -> bool:
     The encoding should be honored.
 
     >>> latin1 = getfixture('tmp_path') / 'latin1'
-    >>> _ = latin1.write_text('Æ', encoding='latin1')
+    >>> latin1_hdr = '# -*- coding: latin-1 -*-\n"Æ"\n'
+    >>> _ = latin1.write_text(latin1_hdr, encoding='latin1')
     >>> is_namespace(latin1)
     False
+    >>> _ = latin1.write_text(latin1_hdr + pkgutil_decl, encoding='latin1')
+    >>> is_namespace(latin1)
+    True
     """
     with tokenize.open(init) as strm:
         text = strm.read()
