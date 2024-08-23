@@ -16,4 +16,4 @@ def run(include: re.compile = re.compile('.*'), url=pypi.top_8k):
             dist.load() or dist.save()
             dist.report()
         except Exception as exc:
-            log.exception(f"{exc} loading {dist}")
+            log.error(f"{exc} loading {dist}")

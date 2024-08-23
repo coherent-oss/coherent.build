@@ -90,7 +90,12 @@ class Distribution(str):
         info = session.get(f'{self}/json').json()
         if 'urls' not in info:
             raise RuntimeError("No URLs")
-        match = first(url for url in info['urls'] if url['filename'].endswith('.whl'))
+        try:
+            match = first(
+                url for url in info['urls'] if url['filename'].endswith('.whl')
+            )
+        except ValueError:
+            raise ValueError("No wheels")
         resp = session.get(match['url'])
         zf = zipfile.ZipFile(io.BytesIO(resp.content))
         zf.filename = match['filename']
