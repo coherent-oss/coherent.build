@@ -22,6 +22,7 @@ import jaraco.mongodb.helper
 import keyring
 import tempora.utc
 from more_itertools import first, one
+from requests.exceptions import HTTPError
 from requests_toolbelt import sessions
 from requests_file import FileAdapter
 
@@ -124,7 +125,7 @@ class Distribution(str):
                 name=self._get_name(),
                 roots=list(find_roots(*find_names(self.wheel))),
             )
-        except ValueError as exc:
+        except (ValueError, HTTPError) as exc:
             return dict(error=str(exc))
 
     def __json__(self):
