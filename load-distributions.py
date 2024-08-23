@@ -24,5 +24,5 @@ def run(
     if jump:
         skipped, dists = split_before(dists, lambda dist: dist == jump, maxsplit=1)
         print('skipped', len(skipped))
-    for dist in tqdm.tqdm(dists):
+    for dist in tqdm.tqdm(list(dists)):
         dist.load() or dist.save()
