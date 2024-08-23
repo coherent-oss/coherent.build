@@ -36,7 +36,6 @@ top_8k = 'https://hugovk.github.io/top-pypi-packages/top-pypi-packages-30-days.m
 @functools.cache
 def store():
     db = client(getpass.getuser())
-    db.distributions.create_index([('created', 1)], expireAfterSeconds=86400 * 30)
     db.distributions.create_index([('roots', 1)])
     return db.distributions
 
