@@ -19,6 +19,7 @@ __requires__ = [
     'tempora',
     'requests-file',
     'tqdm',
+    'retry-requests',
 ]
 
 

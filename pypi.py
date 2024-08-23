@@ -28,9 +28,10 @@ from more_itertools import first, one
 from requests.exceptions import HTTPError
 from requests_toolbelt import sessions
 from requests_file import FileAdapter
+from retry_requests import retry
 
 
-session = sessions.BaseUrlSession('https://pypi.python.org/pypi/')
+session = retry(sessions.BaseUrlSession('https://pypi.python.org/pypi/'))
 session.mount('file://', FileAdapter())
 log = logging.getLogger(__name__)
 
