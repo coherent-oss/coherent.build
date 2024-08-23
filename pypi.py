@@ -207,11 +207,14 @@ def is_namespace(init: zipfile.Path) -> bool:
     r"""
     Is the init file one of the namespace package declarations.
 
-    >>> pkgutil = "__path__ = __import__('pkgutil').extend_path(__path__, __name__)"
-    >>> bool(ns_pattern.search(pkgutil))
+    >>> pkgutil = getfixture('tmp_path') / 'pkgutil'
+    >>> _ = pkgutil.write_text("__path__ = __import__('pkgutil').extend_path(__path__, __name__)")
+    >>> is_namespace(pkgutil)
     True
-    >>> pkg_res = "import pkg_resources\npkg_resources.declare_namespace(__name__)"
-    >>> bool(ns_pattern.search(pkg_res))
+
+    >>> pkg_res = getfixture('tmp_path') / 'pkg_res'
+    >>> _ = pkg_res.write_text("import pkg_resources\npkg_resources.declare_namespace(__name__)")
+    >>> is_namespace(pkg_res)
     True
 
     In case the file cannot be parsed, return False.
