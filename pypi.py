@@ -23,11 +23,14 @@ import keyring
 import tempora.utc
 from more_itertools import first, one
 from requests_toolbelt import sessions
+from requests_file import FileAdapter
+
 
 session = sessions.BaseUrlSession('https://pypi.python.org/pypi/')
+session.mount('file://', FileAdapter())
 log = logging.getLogger(__name__)
 
-url = 'https://hugovk.github.io/top-pypi-packages/top-pypi-packages-30-days.min.json'
+top_8k = 'https://hugovk.github.io/top-pypi-packages/top-pypi-packages-30-days.min.json'
 
 
 @functools.cache
@@ -94,7 +97,7 @@ class Distribution(str):
         return zipfile.Path(zf)
 
     @classmethod
-    def query(cls):
+    def query(cls, url=top_8k):
         return map(
             cls, map(operator.itemgetter('project'), session.get(url).json()['rows'])
         )

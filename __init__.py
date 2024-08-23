@@ -17,6 +17,7 @@ __requires__ = [
     'jaraco.mongodb',
     'keyring',
     'tempora',
+    'requests-file',
 ]
 
 
