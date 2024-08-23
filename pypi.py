@@ -201,6 +201,22 @@ ns_pattern = re.compile(
 )
 
 
+def open(path: zipfile.Path):
+    """
+    Modeled after tokenize.open, open the path using detected encoding.
+    """
+    buffer = path.open('rb')
+    try:
+        encoding, lines = tokenize.detect_encoding(buffer.readline)
+        buffer.seek(0)
+        text = io.TextIOWrapper(buffer, encoding, line_buffering=True)
+        text.mode = 'r'
+        return text
+    except Exception:
+        buffer.close()
+        raise
+
+
 @apply(bool)
 @suppress(SyntaxError)
 def is_namespace(init: zipfile.Path) -> bool:
@@ -237,7 +253,7 @@ def is_namespace(init: zipfile.Path) -> bool:
     >>> is_namespace(latin1)
     True
     """
-    with tokenize.open(init) as strm:
+    with open(init) as strm:
         text = strm.read()
     return len(text) < 2**10 and ns_pattern.search(text)
 
