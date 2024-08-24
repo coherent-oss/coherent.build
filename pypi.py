@@ -9,7 +9,6 @@ import importlib.metadata
 import itertools
 import json
 import logging
-import operator
 import os
 import pathlib
 import re
@@ -118,9 +117,13 @@ class Distribution(str):
 
     @classmethod
     def query(cls, url=top_8k):
-        return map(
-            cls, map(operator.itemgetter('project'), session.get(url).json()['rows'])
-        )
+        return map(cls.from_row, session.get(url).json()['rows'])
+
+    @classmethod
+    def from_row(cls, row):
+        self = cls(row['project'])
+        self.downloads = row['download_count']
+        return self
 
     def load(self):
         found = store().find_one(dict(id=self))
@@ -141,7 +144,7 @@ class Distribution(str):
             return dict(error=str(exc))
 
     def __json__(self):
-        keys = ['name', 'roots', 'error']
+        keys = ['name', 'roots', 'error', 'downloads']
         return dict(id=self, **jaraco.collections.Projection(keys, vars(self)))
 
     def _get_name(self):
