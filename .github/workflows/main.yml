@@ -1,4 +1,5 @@
-# Downstream workflow
+name: tests
+
 on:
   merge_group:
   push:
