@@ -260,12 +260,18 @@ def render_badges(type):
     _, _, subtype = type.partition('/')
     rb = functools.partial(render_badge, subtype.replace('x-', ''))
     PROJECT = best_name()
+    URL = source_url()
     yield rb(
         image=f'https://img.shields.io/pypi/v/{PROJECT}',
         target=f'https://pypi.org/project/{PROJECT}',
     )
 
     yield rb(image=f'https://img.shields.io/pypi/pyversions/{PROJECT}')
+
+    yield rb(
+        image=f'{URL}/actions/workflows/main.yml/badge.svg',
+        target=f'{URL}/actions?query=workflow%3A%22tests%22',
+    )
 
     system = urllib.parse.quote('coherent system')
     yield rb(
