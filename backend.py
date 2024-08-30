@@ -166,10 +166,11 @@ def build_editable(wheel_directory, config_settings=None, metadata_directory=Non
 
 def proxy():
     return textwrap.dedent(f"""
+        import io
         __path__ = [{os.getcwd()!r}]
         __file__ = __path__[0] + '/__init__.py'
         try:
-            strm = open(__file__, 'rb')
+            strm = io.open_code(__file__)
         except FileNotFoundError:
             pass
         else:
