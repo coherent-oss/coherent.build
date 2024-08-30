@@ -153,17 +153,37 @@ def inferred_deps():
     Infer deps from module imports.
     """
     names = [
-        imp.relative_to(best_name())
+        (imp.relative_to(best_name()), module)
         for module in filter(is_python, source_files())
         for imp in imports.get_module_imports(module)
         if not imp.builtin()
         and not imp.relative_to(best_name()).startswith(best_name())
     ]
-    for name in names:
+    for name, module in names:
         try:
-            yield pypi.distribution_for(name)
+            yield pypi.distribution_for(name) + extra_for(module)
         except Exception:
             print("Error resolving import", name, file=sys.stderr)
+
+
+def extra_for(module: pathlib.Path) -> str:
+    """
+    Emit appropriate extra marker if relevant to the module's path.
+
+    >>> extra_for(pathlib.Path('foo/bar'))
+    ''
+    >>> extra_for(pathlib.Path('foo.py'))
+    ''
+    >>> extra_for(pathlib.Path('tests/foo'))
+    '; extra=="test"'
+    >>> extra_for(pathlib.Path('docs/conf.py'))
+    '; extra=="doc"'
+    """
+    mapping = dict(tests='test', docs='doc')
+    try:
+        return f'; extra=="{mapping[str(module.parents[-2])]}"'
+    except (KeyError, IndexError):
+        return ''
 
 
 def extras_from_dep(dep):
