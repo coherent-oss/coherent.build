@@ -7,6 +7,7 @@ import logging
 import mimetypes
 import operator
 import pathlib
+import re
 import subprocess
 import sys
 import types
@@ -168,8 +169,11 @@ def inferred_deps():
 
 
 def combined_deps():
+    def normalize(name):
+        return re.sub(r'[.-_]', '-', name).lower()
+
     def package_name(dep):
-        return packaging.requirements.Requirement(dep).name
+        return normalize(packaging.requirements.Requirement(dep).name)
 
     return unique_everseen(
         itertools.chain(read_deps(), inferred_deps()),
