@@ -21,6 +21,7 @@ __requires__ = [
     'retry-requests',
     'jaraco.ui',
     'more-itertools',
+    'jaraco.collections',
 ]
 
 
