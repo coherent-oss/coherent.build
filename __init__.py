@@ -20,6 +20,7 @@ __requires__ = [
     'tqdm',
     'retry-requests',
     'jaraco.ui',
+    'more-itertools',
 ]
 
 

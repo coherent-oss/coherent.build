@@ -20,6 +20,7 @@ import requests
 import setuptools_scm
 from jaraco.compat.py38 import r_fix
 from jaraco.context import suppress
+from more_itertools import unique_everseen
 from packaging.version import Version
 from pip_run import scripts
 
@@ -164,6 +165,16 @@ def inferred_deps():
             yield pypi.distribution_for(name) + extra_for(module)
         except Exception:
             print("Error resolving import", name, file=sys.stderr)
+
+
+def combined_deps():
+    def package_name(dep):
+        return packaging.requirements.Requirement(dep).name
+
+    return unique_everseen(
+        itertools.chain(read_deps(), inferred_deps()),
+        key=package_name,
+    )
 
 
 def extra_for(module: pathlib.Path) -> str:
