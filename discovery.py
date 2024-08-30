@@ -126,7 +126,7 @@ def python_requires_supported():
     return f'>= {min_ver}'
 
 
-def read_deps():
+def declared_deps():
     """
     Read deps from ``__init__.py``.
     """
@@ -176,7 +176,7 @@ def combined_deps():
         return normalize(packaging.requirements.Requirement(dep).name)
 
     return unique_everseen(
-        itertools.chain(read_deps(), inferred_deps()),
+        itertools.chain(declared_deps(), inferred_deps()),
         key=package_name,
     )
 
