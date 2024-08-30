@@ -9,6 +9,7 @@ import importlib.metadata
 import itertools
 import json
 import logging
+import operator
 import os
 import pathlib
 import re
@@ -125,26 +126,33 @@ class Distribution(str):
         self.downloads = row['download_count']
         return self
 
-    def load(self):
-        found = store().find_one(dict(id=self))
-        doc = found or self.from_wheel()
-        vars(self).update(doc)
-        return found
+    @classmethod
+    def unprocessed(cls):
+        query = {"updated": {"$exists": False}}
+        return map(cls, map(operator.itemgetter('id'), store().find(query)))
+
+    def refresh(self):
+        vars(self).update(self.from_wheel())
 
     def save(self):
-        store().insert_one(dict(self.__json__(), updated=tempora.utc.now()))
+        return store().update_one({"id": self}, {"$set": self.__json__()}, upsert=True)
 
     def from_wheel(self):
+        updated = tempora.utc.now()
         try:
             return dict(
                 name=self._get_name(),
                 roots=list(find_roots(*find_names(self.wheel))),
+                updated=updated,
             )
         except (ValueError, HTTPError, KeyError) as exc:
-            return dict(error=str(exc))
+            return dict(
+                error=str(exc),
+                updated=updated,
+            )
 
     def __json__(self):
-        keys = ['name', 'roots', 'error', 'downloads']
+        keys = ['name', 'roots', 'error', 'downloads', 'updated']
         return dict(id=self, **jaraco.collections.Projection(keys, vars(self)))
 
     def _get_name(self):
