@@ -5,7 +5,7 @@ Load metadata for unprocessed distributions.
 import tqdm
 from jaraco.ui.main import main
 
-from . import pypi
+from .. import pypi
 
 
 @main
