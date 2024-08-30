@@ -12,7 +12,6 @@ __requires__ = [
     'importlib_resources; python_version < "3.12"',
     'jaraco.vcs',
     'requests_toolbelt',
-    'autocommand',
     'zipp>=3.20',
     'jaraco.mongodb',
     'keyring',
@@ -20,6 +19,7 @@ __requires__ = [
     'requests-file',
     'tqdm',
     'retry-requests',
+    'jaraco.ui',
 ]
 
 
