@@ -1,18 +1,7 @@
 __requires__ = [
-    'wheel',
-    'pip-run',
-    'setuptools_scm',
     'build',
     'git-fame',
-    'jaraco.context',
-    'requests',
-    'packaging',
-    'jaraco.functools',
-    'jaraco.compat >= 4.1',
     'importlib_resources; python_version < "3.12"',
-    'jaraco.vcs',
-    'more-itertools',
-    'coherent.deps',
 ]
 
 
