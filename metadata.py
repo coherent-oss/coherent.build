@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import email.message
+import email.policy
 import functools
 import importlib.metadata
 import pathlib
@@ -41,6 +42,11 @@ def _(values: email.message.Message) -> Iterable[Tuple[str, str]]:
     return values._headers
 
 
+class Policy(email.policy.EmailPolicy):
+    def header_store_parse(self, name, value):
+        return (name, self.header_factory(name, value))
+
+
 class Message(email.message.Message):
     """
     >>> md = Message.discover()
@@ -49,11 +55,11 @@ class Message(email.message.Message):
 
     >>> msg = Message({'Material': 'Kokuyōseki'})
     >>> print(msg.render().strip())
-    Material: =?utf-8?q?Kokuy=C5=8Dseki?=
+    Material: Kokuyōseki
     """
 
     def __init__(self, values):
-        super().__init__()
+        super().__init__(policy=Policy(utf8=True))
         for item in always_items(values):
             self.add_header(*item)
 
