@@ -189,7 +189,7 @@ def extra_for(module: pathlib.Path) -> str:
     ''
     >>> extra_for(pathlib.Path('foo.py'))
     ''
-    >>> extra_for(pathlib.Path('tests/foo'))
+    >>> extra_for(pathlib.Path('tests/functional/foo'))
     '; extra=="test"'
     >>> extra_for(pathlib.Path('docs/conf.py'))
     '; extra=="doc"'
