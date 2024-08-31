@@ -196,7 +196,7 @@ def extra_for(module: pathlib.Path) -> str:
     """
     mapping = dict(tests='test', docs='doc')
     try:
-        return f'; extra=="{mapping[str(module.parents[-2])]}"'
+        return f'; extra=="{mapping[str(list(module.parents)[-2])]}"'
     except (KeyError, IndexError):
         return ''
 
