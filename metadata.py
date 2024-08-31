@@ -46,6 +46,10 @@ class Message(email.message.Message):
     >>> md = Message.discover()
     >>> md['Summary']
     'A zero-config Python project build backend'
+
+    >>> msg = Message({'Material': 'Kokuyōseki'})
+    >>> print(msg.render().strip())
+    Material: =?utf-8?q?Kokuy=C5=8Dseki?=
     """
 
     def __init__(self, values):
