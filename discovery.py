@@ -25,8 +25,8 @@ from more_itertools import unique_everseen
 from packaging.version import Version
 from pip_run import scripts
 
-from . import imports
-from . import pypi
+from ..deps import imports
+from ..deps import pypi
 
 log = logging.getLogger(__name__)
 
