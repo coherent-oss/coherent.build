@@ -11,6 +11,8 @@ __requires__ = [
     'jaraco.compat >= 4.1',
     'importlib_resources; python_version < "3.12"',
     'jaraco.vcs',
+    'more-itertools',
+    'coherent.deps',
 ]
 
 

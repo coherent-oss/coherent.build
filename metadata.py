@@ -81,7 +81,7 @@ class Message(email.message.Message):
         yield 'Author-Email', discovery.author_from_vcs()
         yield 'Summary', discovery.summary_from_github()
         yield 'Requires-Python', discovery.python_requires_supported()
-        deps = list(discovery.read_deps())
+        deps = list(discovery.combined_deps())
         for dep in deps:
             yield 'Requires-Dist', dep
         for extra in discovery.full_extras(discovery.extras_from_deps(deps)):

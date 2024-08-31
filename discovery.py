@@ -7,7 +7,9 @@ import logging
 import mimetypes
 import operator
 import pathlib
+import re
 import subprocess
+import sys
 import types
 import urllib.parse
 from collections.abc import Mapping
@@ -19,8 +21,11 @@ import requests
 import setuptools_scm
 from jaraco.compat.py38 import r_fix
 from jaraco.context import suppress
+from more_itertools import unique_everseen
 from packaging.version import Version
 from pip_run import scripts
+
+from ..deps import imports, pypi
 
 log = logging.getLogger(__name__)
 
@@ -120,11 +125,79 @@ def python_requires_supported():
     return f'>= {min_ver}'
 
 
-def read_deps():
+def declared_deps():
     """
     Read deps from ``__init__.py``.
     """
     return scripts.DepsReader.search(['__init__.py'])
+
+
+def source_files():
+    """
+    Return all files in the source distribution.
+
+    >>> list(source_files())
+    [...Path('discovery.py')...]
+    """
+    return (
+        pathlib.Path(path)
+        for path in subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
+    )
+
+
+def is_python(path: pathlib.Path) -> bool:
+    return path.suffix == '.py'
+
+
+def inferred_deps():
+    """
+    Infer deps from module imports.
+    """
+    names = [
+        (imp.relative_to(best_name()), module)
+        for module in filter(is_python, source_files())
+        for imp in imports.get_module_imports(module)
+        if not imp.builtin()
+        and not imp.relative_to(best_name()).startswith(best_name())
+    ]
+    for name, module in names:
+        try:
+            yield pypi.distribution_for(name) + extra_for(module)
+        except Exception:
+            print("Error resolving import", name, file=sys.stderr)
+
+
+def combined_deps():
+    def normalize(name):
+        return re.sub(r'[.-_]', '-', name).lower()
+
+    def package_name(dep):
+        return normalize(packaging.requirements.Requirement(dep).name)
+
+    return unique_everseen(
+        itertools.chain(declared_deps(), inferred_deps()),
+        key=package_name,
+    )
+
+
+def extra_for(module: pathlib.Path) -> str:
+    """
+    Emit appropriate extra marker if relevant to the module's path.
+
+    >>> extra_for(pathlib.Path('foo/bar'))
+    ''
+    >>> extra_for(pathlib.Path('foo.py'))
+    ''
+    >>> extra_for(pathlib.Path('tests/functional/foo'))
+    '; extra=="test"'
+    >>> extra_for(pathlib.Path('docs/conf.py'))
+    '; extra=="doc"'
+    """
+    mapping = dict(tests='test', docs='doc')
+    try:
+        return f'; extra=="{mapping[str(list(module.parents)[-2])]}"'
+    except (KeyError, IndexError):
+        return ''
 
 
 def extras_from_dep(dep):
