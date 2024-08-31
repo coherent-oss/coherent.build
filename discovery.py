@@ -157,7 +157,7 @@ def inferred_deps():
         (imp.relative_to(best_name()), module)
         for module in filter(is_python, source_files())
         for imp in imports.get_module_imports(module)
-        if not imp.builtin()
+        if not imp.standard()
         and not imp.relative_to(best_name()).startswith(best_name())
     ]
     for name, module in names:
