@@ -355,12 +355,17 @@ def render_badges(type):
 
 
 def description_from_readme():
-    with contextlib.suppress(ValueError, AssertionError):
-        (readme,) = pathlib.Path().glob('README*')
-        ct = guess_content_type(readme)
-        assert ct
+    with contextlib.suppress(AssertionError):
+        try:
+            (readme,) = pathlib.Path().glob('README*')
+        except ValueError:
+            text, ct = '', 'text/markdown'
+        else:
+            ct = guess_content_type(readme)
+            assert ct
+            text = readme.read_text('utf-8')
         yield 'Description-Content-Type', ct
-        yield 'Description', inject_badges(readme.read_text(encoding='utf-8'), ct)
+        yield 'Description', inject_badges(text, ct)
 
 
 def age_of_repo():
