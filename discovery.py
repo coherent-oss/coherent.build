@@ -149,12 +149,22 @@ def is_python(path: pathlib.Path) -> bool:
     return path.suffix == '.py'
 
 
+def base(module):
+    """
+    >>> base(pathlib.Path('foo/bar/bin.py'))
+    'coherent.build.foo.bar'
+    >>> base(pathlib.Path('foo.py'))
+    'coherent.build'
+    """
+    return '.'.join((best_name(),) + module.parent.parts)
+
+
 def inferred_deps():
     """
     Infer deps from module imports.
     """
     names = [
-        (imp.relative_to(best_name()), module)
+        (imp.relative_to(base(module)), module)
         for module in filter(is_python, source_files())
         for imp in imports.get_module_imports(module)
         if not imp.standard()
