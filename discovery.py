@@ -161,10 +161,8 @@ def inferred_deps():
         and not imp.relative_to(best_name()).startswith(best_name())
     ]
     for name, module in names:
-        try:
-            yield pypi.distribution_for(name) + extra_for(module)
-        except Exception:
-            print("Error resolving import", name, file=sys.stderr)
+        # TODO(#30): Handle resolution errors gracefully
+        yield pypi.distribution_for(name) + extra_for(module)
 
 
 def combined_deps():
