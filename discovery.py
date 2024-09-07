@@ -168,7 +168,7 @@ def inferred_deps():
         for module in filter(is_python, source_files())
         for imp in imports.get_module_imports(module)
         if not imp.standard()
-        and not imp.relative_to(best_name()).startswith(best_name())
+        and not imp.relative_to(base(module)).startswith(best_name())
     ]
     for name, module in names:
         # TODO(#30): Handle resolution errors gracefully
