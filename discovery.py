@@ -9,7 +9,6 @@ import operator
 import pathlib
 import re
 import subprocess
-import sys
 import types
 import urllib.parse
 from collections.abc import Mapping
