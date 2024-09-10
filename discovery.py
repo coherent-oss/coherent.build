@@ -158,20 +158,23 @@ def base(module):
     return '.'.join((best_name(),) + module.parent.parts)
 
 
+def is_local(import_):
+    return import_.name.startswith(best_name())
+
+
 def inferred_deps():
     """
     Infer deps from module imports.
     """
-    names = [
-        (imp.relative_to(base(module)), module)
+    imps = (
+        types.SimpleNamespace(name=imp.relative_to(base(module)), module=module)
         for module in filter(is_python, source_files())
         for imp in imports.get_module_imports(module)
         if not imp.standard()
-        and not imp.relative_to(base(module)).startswith(best_name())
-    ]
-    for name, module in names:
+    )
+    for imp in itertools.filterfalse(is_local, imps):
         # TODO(#30): Handle resolution errors gracefully
-        yield pypi.distribution_for(name) + extra_for(module)
+        yield pypi.distribution_for(imp.name) + extra_for(imp.module)
 
 
 def combined_deps():
