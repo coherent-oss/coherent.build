@@ -1,17 +1,32 @@
 import contextlib
 import pathlib
+from typing import Callable, ContextManager
 
 from .compat.py311 import importlib
 
 
+def write_pyproject(target: pathlib.Path = pathlib.Path()) -> ContextManager[None]:
+    return assured(
+        target / 'pyproject.toml',
+        importlib.resources.files().joinpath('system.toml').read_text,
+    )
+
+
 @contextlib.contextmanager
-def write_pyproject(target: pathlib.Path = pathlib.Path()):
-    path = target / 'pyproject.toml'
-    if path.exists():
+def assured(
+    target: pathlib.Path, content_factory: Callable[[], str]
+) -> ContextManager[None]:
+    """
+    Yield with target existing on the file system.
+
+    If target does not already exist, it is created with the contents
+    as supplied by ``content_factory()`` and deleted on exit.
+    """
+    if target.exists():
         yield
         return
-    path.write_text(importlib.resources.files().joinpath('system.toml').read_text())
+    target.write_text(content_factory())
     try:
         yield
     finally:
-        path.unlink()
+        target.unlink()
