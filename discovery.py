@@ -356,6 +356,15 @@ def render_badges(type):
         target=f'{URL}/actions?query=workflow%3A%22tests%22',
     )
 
+    yield rb(
+        image=(
+            'https://img.shields.io/endpoint?'
+            'url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json'
+        ),
+        target='https://github.com/astral-sh/ruff',
+        alt_text='Ruff',
+    )
+
     system = urllib.parse.quote('coherent system')
     yield rb(
         image=f'https://img.shields.io/badge/{system}-informational',
