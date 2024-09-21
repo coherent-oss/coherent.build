@@ -170,7 +170,7 @@ def inferred_deps():
         types.SimpleNamespace(name=imp.relative_to(base(module)), module=module)
         for module in filter(is_python, source_files())
         for imp in imports.get_module_imports(module)
-        if not imp.standard()
+        if not imp.excluded()
     )
     for imp in itertools.filterfalse(is_local, imps):
         # TODO(#30): Handle resolution errors gracefully
