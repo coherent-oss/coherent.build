@@ -34,17 +34,25 @@ mimetypes.add_type('text/x-rst', '.rst', strict=True)
 
 
 @suppress(subprocess.CalledProcessError)
-def name_from_vcs():
+def origin() -> str:
+    return subprocess.check_output(
+        ['git', 'remote', 'get-url', 'origin'],
+        text=True,
+        encoding='utf-8',
+    ).strip()
+
+
+def name_from_vcs() -> str | None:
     """
     >>> name_from_vcs()
     'coherent.build'
     """
-    url = subprocess.check_output(
-        ['git', 'remote', 'get-url', 'origin'],
-        text=True,
-        encoding='utf-8',
-    )
-    _, _, tail = url.strip().rpartition('/')
+    return name_from_origin(origin())
+
+
+@jaraco.functools.pass_none
+def name_from_origin(origin: str | None) -> str:
+    _, _, tail = origin.rpartition('/')
     return r_fix(tail).removesuffix('.git')
 
 
