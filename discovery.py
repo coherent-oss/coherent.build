@@ -78,7 +78,7 @@ def repo_info() -> Mapping:
     return github_repo_info()
 
 
-@suppress(subprocess.CalledProcessError)
+@suppress(subprocess.CalledProcessError, FileNotFoundError)
 def github_repo_info() -> Mapping:
     data = json.loads(
         subprocess.check_output(
