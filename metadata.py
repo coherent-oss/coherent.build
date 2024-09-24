@@ -89,7 +89,7 @@ class Message(email.message.Message):
         yield 'Name', discovery.best_name()
         yield 'Version', discovery.version_from_vcs()
         yield 'Author-Email', discovery.author_from_vcs()
-        yield 'Summary', discovery.summary_from_github()
+        yield 'Summary', discovery.summary()
         yield 'Requires-Python', discovery.python_requires_supported()
         deps = list(discovery.combined_deps())
         for dep in deps:

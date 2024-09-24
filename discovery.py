@@ -74,8 +74,12 @@ def none_as(replacement):
 
 @functools.lru_cache
 @jaraco.functools.apply(none_as({}))
-@suppress(subprocess.CalledProcessError)
 def repo_info() -> Mapping:
+    return github_repo_info()
+
+
+@suppress(subprocess.CalledProcessError)
+def github_repo_info() -> Mapping:
     data = json.loads(
         subprocess.check_output(
             ['gh', 'repo', 'view', '--json', 'description,url'],
@@ -86,11 +90,11 @@ def repo_info() -> Mapping:
     return {k: v for k, v in data.items() if v}
 
 
-def summary_from_github():
+def summary():
     """
-    Load the summary from GitHub.
+    Load the summary from hosted project.
 
-    >>> summary_from_github()
+    >>> summary()
     'A zero-config Python project build backend'
     """
     return repo_info().get('description')
@@ -98,7 +102,7 @@ def summary_from_github():
 
 def source_url():
     """
-    Load the repo URL from GitHub.
+    Load the repo URL from hosted project.
 
     >>> source_url()
     'https://github.com/coherent-oss/coherent.build'
