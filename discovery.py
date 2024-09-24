@@ -13,6 +13,7 @@ import types
 import urllib.parse
 from collections.abc import Mapping
 
+import gitlab
 import jaraco.functools
 import jaraco.vcs
 import packaging.requirements
@@ -50,10 +51,25 @@ def name_from_vcs() -> str | None:
     return name_from_origin(origin())
 
 
+def owner_from_vcs() -> str | None:
+    """
+    >>> owner_from_vcs()
+    'coherent-oss'
+    """
+    return owner_from_origin(origin())
+
+
 @jaraco.functools.pass_none
 def name_from_origin(origin: str | None) -> str:
     _, _, tail = origin.rpartition('/')
     return r_fix(tail).removesuffix('.git')
+
+
+@jaraco.functools.pass_none
+def owner_from_origin(origin: str | None) -> str:
+    head, _, _ = origin.rpartition('/')
+    _, _, owner = head.rpartition('/')
+    return owner
 
 
 def name_from_path():
@@ -83,7 +99,7 @@ def none_as(replacement):
 @functools.lru_cache
 @jaraco.functools.apply(none_as({}))
 def repo_info() -> Mapping:
-    return github_repo_info()
+    return github_repo_info() or gitlab_repo_info()
 
 
 @suppress(subprocess.CalledProcessError, FileNotFoundError)
@@ -96,6 +112,18 @@ def github_repo_info() -> Mapping:
         )
     )
     return {k: v for k, v in data.items() if v}
+
+
+@suppress(gitlab.exceptions.GitlabError)
+def gitlab_repo_info() -> Mapping:
+    api = gitlab.Gitlab('https://gitlab.com')
+    name = name_from_vcs()
+    owner = owner_from_vcs()
+    project = api.projects.get(f'{owner}/{name}')
+    result = dict(url=project.web_url)
+    if project.description:
+        result.update(description=project.description)
+    return result
 
 
 def summary():
