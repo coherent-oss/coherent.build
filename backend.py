@@ -66,9 +66,13 @@ class SDist(Filter):
     Should not ignore nested dist dirs
     >>> sf(types.SimpleNamespace(name='./bar/dist'))
     namespace(name='foo/bar/dist')
+
+    Should not ignore paths that begin with 'dist'
+    >>> sf(types.SimpleNamespace(name='./distributions'))
+    namespace(name='foo/distributions')
     """
 
-    ignored = ['dist', r'(.*[/])?__pycache__$', r'(.*[/])?[.]']
+    ignored = ['dist$', r'(.*[/])?__pycache__$', r'(.*[/])?[.]']
 
 
 class Wheel(Filter):
