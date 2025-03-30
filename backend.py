@@ -11,7 +11,6 @@ import time
 import types
 from collections.abc import Iterator
 
-from jaraco.compat.py38 import r_fix
 from jaraco.functools import pass_none
 from wheel.wheelfile import WheelFile
 
@@ -42,9 +41,9 @@ class Filter:
             info.name = self.name
             return info
         ignore_pattern = '|'.join(self.ignored)
-        if re.match(ignore_pattern, r_fix(info.name).removeprefix('./')):
+        if re.match(ignore_pattern, info.name.removeprefix('./')):
             return
-        info.name = self.name + '/' + r_fix(info.name).removeprefix('./')
+        info.name = self.name + '/' + info.name.removeprefix('./')
         return info
 
 

@@ -21,7 +21,6 @@ import jaraco.vcs
 import packaging.requirements
 import requests
 import setuptools_scm
-from jaraco.compat.py38 import r_fix
 from jaraco.context import suppress
 from more_itertools import unique_everseen
 from packaging.version import Version
@@ -64,7 +63,7 @@ def owner_from_vcs() -> str | None:
 @jaraco.functools.pass_none
 def name_from_origin(origin: str | None) -> str:
     _, _, tail = origin.rpartition('/')
-    return r_fix(tail).removesuffix('.git')
+    return tail.removesuffix('.git')
 
 
 @jaraco.functools.pass_none
