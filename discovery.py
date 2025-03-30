@@ -103,15 +103,22 @@ def repo_info() -> Mapping:
     return github_repo_info() or gitlab_repo_info()
 
 
+def remove_color_codes(text):
+    """
+    Remove ANSI color codes from a string. (#30)
+    """
+    ansi_escape = r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])'
+    return re.sub(ansi_escape, '', text)
+
+
 @suppress(subprocess.CalledProcessError, FileNotFoundError)
 def github_repo_info() -> Mapping:
-    data = json.loads(
-        subprocess.check_output(
-            ['gh', 'repo', 'view', '--json', 'description,url'],
-            text=True,
-            encoding='utf-8',
-        )
+    out = subprocess.check_output(
+        ['gh', 'repo', 'view', '--json', 'description,url'],
+        text=True,
+        encoding='utf-8',
     )
+    data = json.loads(remove_color_codes(out))
     return {k: v for k, v in data.items() if v}
 
 
