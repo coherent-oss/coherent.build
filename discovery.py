@@ -105,7 +105,7 @@ def repo_info() -> Mapping:
 
 def remove_color_codes(text):
     """
-    Remove ANSI color codes from a string. (#30)
+    Remove ANSI color codes from a string. (coherent-oss/system#20)
     """
     ansi_escape = r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])'
     return re.sub(ansi_escape, '', text)
