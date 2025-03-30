@@ -61,6 +61,9 @@ class SDist(Filter):
     Ignore paths starting with a dot
     >>> sf(types.SimpleNamespace(name='./bar/.DS_Store'))
 
+    Ignore dist dirs
+    >>> sf(types.SimpleNamespace(name='./dist'))
+
     Should not ignore nested dist dirs
     >>> sf(types.SimpleNamespace(name='./bar/dist'))
     namespace(name='foo/bar/dist')
@@ -74,7 +77,27 @@ class SDist(Filter):
 
 
 class Wheel(Filter):
-    ignored = [
+    """
+    >>> wf = Wheel(name="foo")
+
+    Ignore all the things SDist does (coherent-oss/coherent.build#33)
+    >>> wf(types.SimpleNamespace(name='./.git'))
+    >>> wf(types.SimpleNamespace(name='./bar/__pycache__'))
+    >>> wf(types.SimpleNamespace(name='./bar/.DS_Store'))
+    >>> wf(types.SimpleNamespace(name='./dist'))
+    >>> wf(types.SimpleNamespace(name='./bar/dist'))
+    namespace(name='foo/bar/dist')
+    >>> wf(types.SimpleNamespace(name='./distributions'))
+    namespace(name='foo/distributions')
+
+    Additionally, filters out non-project files:
+    >>> wf(types.SimpleNamespace(name='./README.rst'))
+    >>> wf(types.SimpleNamespace(name='./docs'))
+    >>> wf(types.SimpleNamespace(name='./(meta)'))
+    >>> wf(types.SimpleNamespace(name='./pyproject.toml'))
+    """
+
+    ignored = SDist.ignored + [
         'docs',
         'tests',
         r'README.*',
