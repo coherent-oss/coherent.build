@@ -1,6 +1,5 @@
 import sys
 
-
 if sys.version_info >= (3, 12):
     import importlib.resources
 else:

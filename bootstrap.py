@@ -1,11 +1,13 @@
 import contextlib
 import pathlib
-from typing import Callable, ContextManager
+from typing import Callable
 
 from .compat.py311 import importlib
 
 
-def write_pyproject(target: pathlib.Path = pathlib.Path()) -> ContextManager[None]:
+def write_pyproject(
+    target: pathlib.Path = pathlib.Path(),
+) -> contextlib.AbstractContextManager[None]:
     return assured(
         target / 'pyproject.toml',
         importlib.resources.files().joinpath('system.toml').read_text,
@@ -15,7 +17,7 @@ def write_pyproject(target: pathlib.Path = pathlib.Path()) -> ContextManager[Non
 @contextlib.contextmanager
 def assured(
     target: pathlib.Path, content_factory: Callable[[], str]
-) -> ContextManager[None]:
+) -> contextlib.AbstractContextManager[None]:
     """
     Yield with target existing on the file system.
 

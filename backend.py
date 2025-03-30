@@ -9,9 +9,7 @@ import tarfile
 import textwrap
 import time
 import types
-from typing import (
-    Iterator,
-)
+from collections.abc import Iterator
 
 from jaraco.compat.py38 import r_fix
 from jaraco.functools import pass_none

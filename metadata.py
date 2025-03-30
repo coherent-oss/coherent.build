@@ -6,12 +6,7 @@ import email.policy
 import functools
 import importlib.metadata
 import pathlib
-from collections.abc import Mapping
-
-from typing import (
-    Iterable,
-    Tuple,  # Python 3.8
-)
+from collections.abc import Iterable, Mapping
 
 import packaging
 
@@ -24,8 +19,8 @@ def _normalize(name):
 
 @functools.singledispatch
 def always_items(
-    values: Mapping | email.message.Message | Iterable[Tuple[str, str]],
-) -> Iterable[Tuple[str, str]]:
+    values: Mapping | email.message.Message | Iterable[tuple[str, str]],
+) -> Iterable[tuple[str, str]]:
     """
     Always emit an iterable of pairs, even for Mapping or Message.
     """
@@ -33,12 +28,12 @@ def always_items(
 
 
 @always_items.register
-def _(values: Mapping) -> Iterable[Tuple[str, str]]:
+def _(values: Mapping) -> Iterable[tuple[str, str]]:
     return values.items()
 
 
 @always_items.register
-def _(values: email.message.Message) -> Iterable[Tuple[str, str]]:
+def _(values: email.message.Message) -> Iterable[tuple[str, str]]:
     return values._headers
 
 
