@@ -6,9 +6,11 @@ import email.policy
 import functools
 import importlib.metadata
 import pathlib
+import re
 from collections.abc import Iterable, Mapping
 
 import packaging
+import tomlkit
 
 from . import discovery
 
@@ -78,6 +80,15 @@ class Message(email.message.Message):
         """
         return cls(cls._discover_fields())
 
+    @property
+    def author(self):
+        return self.parse_contributor(self['Author-Email'])
+
+    @staticmethod
+    def parse_contributor(combined):
+        exp = re.compile(r'(?P<name>.*) <(?P<email>.*)>$')
+        return exp.match(combined).groupdict()
+
     @staticmethod
     def _discover_fields():
         yield 'Metadata-Version', '2.3'
@@ -122,3 +133,30 @@ class Message(email.message.Message):
                 'entry_points.txt',
                 pathlib.Path('(meta)/entry_points.txt').read_text(),
             )
+
+    def render_toml(self):
+        tool_section = tomlkit.table()
+        project = tomlkit.table()
+        tool_section.add("project", project)
+
+        project.add("name", self["Name"])
+        project.add("version", self["Version"])
+        project.add("description", self["Summary"])
+        project.add("authors", [self.author])
+        # todo: probably need to write out this file in case it was loaded elsewhere
+        (readme,) = pathlib.Path().glob('README*')
+        project.add("readme", str(readme))
+        project.add("requires-python", self["Requires-Python"])
+        project.add("dependencies", self.get_all("Requires-Dist"))
+        project.add("classifiers", self.get_all("Classifier"))
+
+        urls = tomlkit.table(is_inline=True)
+        project.add("urls", urls)
+        for url in self.get_all("Project-URL"):
+            name, _, value = url.partition(', ')
+            urls.add(name, value)
+
+        document = tomlkit.document()
+        document.add("tool", tool_section)
+
+        return document
