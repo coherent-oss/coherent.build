@@ -213,8 +213,9 @@ def build_sdist(sdist_directory, config_settings=None):
     metadata = Message.discover()
     filename = pathlib.Path(sdist_directory) / f'{metadata.id}.tar.gz'
     with tarfile.open(filename, 'w:gz') as tf:
-        tf.add(pathlib.Path(), filter=SDist(metadata))
+        tf.add(pathlib.Path(), filter=FlitSDist(metadata))
         tf.addfile(*make_sdist_metadata(metadata))
+        tf.addfile(*make_flit_project(metadata))
     return filename.name
 
 
