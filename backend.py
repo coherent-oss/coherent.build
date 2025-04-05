@@ -45,13 +45,10 @@ class Layout(abc.ABC):
         be omitted. Otherwise, mutate the object to include self.root
         as a prefix.
         """
-        if info.name == '.':
-            info.name = self.root
-            return info
         ignore_pattern = '|'.join(self.ignored)
-        if re.match(ignore_pattern, info.name.removeprefix('./')):
+        if info.name != '.' and re.match(ignore_pattern, info.name.removeprefix('./')):
             return
-        info.name = self.root + '/' + info.name.removeprefix('./')
+        info.name = str(pathlib.PurePosixPath(self.root, info.name))
         return info
 
 
