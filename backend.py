@@ -43,8 +43,9 @@ class Layout(abc.ABC):
         should be included or filtered. Return None if the object should
         be omitted. Otherwise, relocate the object to self.prefix.
         """
+        info.name = info.name.removeprefix('./')
         ignore_pattern = '|'.join(self.ignored)
-        if info.name != '.' and re.match(ignore_pattern, info.name.removeprefix('./')):
+        if info.name != '.' and re.match(ignore_pattern, info.name):
             return
         info.name = str(pathlib.PurePosixPath(self.prefix(info.name), info.name))
         return info
