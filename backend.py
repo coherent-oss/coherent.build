@@ -82,6 +82,30 @@ class SDist(Layout):
         return self.metadata.id
 
 
+class FlitSDist(SDist):
+    """
+    Customize the handling to generate a flit-compatible layout.
+
+    Puts README in the root, but the rest in the package.
+
+    >>> md = Message((('Name', 'foo'), ('Version', '1.0')))
+
+    >>> sf = FlitSDist(metadata=md)
+
+    >>> sf(types.SimpleNamespace(name='./bar.py'))
+    namespace(name='foo-1.0/foo/bar.py')
+
+    >>> sf(types.SimpleNamespace(name='./README.md'))
+    namespace(name='foo-1.0/README.md')
+    """
+
+    def prefix(self, name):
+        package = self.metadata['Name'].replace('.', '/')
+        if name.startswith('README.md'):
+            return pathlib.PurePath(self.metadata.id)
+        return pathlib.PurePath(self.metadata.id, package)
+
+
 class Wheel(Layout):
     """
     >>> wf = Wheel(metadata=dict(Name="foo"))
