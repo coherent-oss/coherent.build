@@ -6,6 +6,7 @@ import email.policy
 import functools
 import importlib.metadata
 import pathlib
+import re
 from collections.abc import Iterable, Mapping
 
 import packaging
@@ -78,6 +79,15 @@ class Message(email.message.Message):
         """
         return cls(cls._discover_fields())
 
+    @property
+    def author(self):
+        return self.parse_contributor(self['Author-Email'])
+
+    @staticmethod
+    def parse_contributor(combined):
+        exp = re.compile(r'"?(?P<name>.*?)"? <(?P<email>.*)>$')
+        return exp.match(combined).groupdict()
+
     @staticmethod
     def _discover_fields():
         yield 'Metadata-Version', '2.3'
@@ -122,3 +132,25 @@ class Message(email.message.Message):
                 'entry_points.txt',
                 pathlib.Path('(meta)/entry_points.txt').read_text(),
             )
+
+    def render_toml(self):
+        # todo: probably need to write out this file in case it was loaded elsewhere
+        (readme,) = pathlib.Path().glob('README*')
+
+        project = {
+            "name": self["Name"],
+            "version": self["Version"],
+            "description": self["Summary"],
+            "authors": [self.author],
+            "readme": str(readme),
+            "requires-python": self["Requires-Python"],
+            "dependencies": self.get_all("Requires-Dist"),
+            "classifiers": self.get_all("Classifier"),
+            'urls': self.urls,
+        }
+
+        return dict(project=project)
+
+    @property
+    def urls(self):
+        return dict(url.split(', ', 1) for url in self.get_all('Project-URL'))
