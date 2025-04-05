@@ -15,6 +15,7 @@ from collections.abc import Iterator
 from jaraco.functools import pass_none
 from wheel.wheelfile import WheelFile
 
+from . import flit
 from .metadata import Message
 
 
@@ -167,12 +168,20 @@ def wheel_walk(filter_: Wheel) -> Iterator[ZipInfo]:
         yield from filter(bool, map(filter_, children))
 
 
-def make_sdist_metadata(metadata: Message) -> tarfile.TarInfo:
-    info = tarfile.TarInfo(f'{metadata.id}/PKG-INFO')
-    file = io.BytesIO(metadata.render().encode('utf-8'))
+def make_tarinfo(filename, content):
+    info = tarfile.TarInfo(filename)
+    file = io.BytesIO(content.encode('utf-8'))
     info.size = len(file.getbuffer())
     info.mtime = time.time()
     return info, file
+
+
+def make_sdist_metadata(metadata: Message) -> tarfile.TarInfo:
+    return make_tarinfo(f'{metadata.id}/PKG-INFO', metadata.render())
+
+
+def make_flit_project(metadata: Message) -> tarfile.TarInfo:
+    return make_tarinfo(f'{metadata.id}/pyproject.toml', flit.render(metadata))
 
 
 def prepare_metadata(metadata_directory, config_settings=None):
