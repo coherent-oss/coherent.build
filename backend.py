@@ -99,9 +99,12 @@ class FlitSDist(SDist):
     namespace(name='foo-1.0/README.md')
     """
 
+    ignored = SDist.ignored + [re.escape('pyproject.toml')]
+
     def prefix(self, name):
         package = self.metadata['Name'].replace('.', '/')
-        if name.startswith('README.md'):
+        root_pattern = '|'.join(Wheel.ignored)
+        if re.match(root_pattern, name):
             return pathlib.PurePath(self.metadata.id)
         return pathlib.PurePath(self.metadata.id, package)
 
