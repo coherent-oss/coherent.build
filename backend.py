@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 import io
 import os
 import pathlib
@@ -17,16 +18,23 @@ from wheel.wheelfile import WheelFile
 from .metadata import Message
 
 
-class Filter:
+class Layout(abc.ABC):
     """
-    Filters tar- and zip-info objects for inclusion in different distributions.
+    Lay out tar- and zip-info objects for inclusion in different distributions.
     """
 
-    def __init__(self, name: str):
+    def __init__(self, metadata: Message):
         """
         Initialize the filter with the root of the package ("coherent/build").
         """
-        self.name = name
+        self.metadata = metadata
+
+    @property
+    @abc.abstractmethod
+    def root(self):
+        """
+        Derives the root from the metadata.
+        """
 
     def __call__(self, info):
         """
@@ -34,22 +42,22 @@ class Filter:
 
         Given an object like a tarfile.TarInfo object, determine if it
         should be included or filtered. Return None if the object should
-        be omitted. Otherwise, mutate the object to include self.name
+        be omitted. Otherwise, mutate the object to include self.root
         as a prefix.
         """
         if info.name == '.':
-            info.name = self.name
+            info.name = self.root
             return info
         ignore_pattern = '|'.join(self.ignored)
         if re.match(ignore_pattern, info.name.removeprefix('./')):
             return
-        info.name = self.name + '/' + info.name.removeprefix('./')
+        info.name = self.root + '/' + info.name.removeprefix('./')
         return info
 
 
-class SDist(Filter):
+class SDist(Layout):
     """
-    >>> sf = SDist(name="foo")
+    >>> sf = SDist(metadata=types.SimpleNamespace(id="foo"))
 
     Ignores the .git directory
     >>> sf(types.SimpleNamespace(name='./.git'))
@@ -74,10 +82,14 @@ class SDist(Filter):
 
     ignored = ['dist$', r'(.*[/])?__pycache__$', r'(.*[/])?[.]']
 
+    @property
+    def root(self):
+        return self.metadata.id
 
-class Wheel(Filter):
+
+class Wheel(Layout):
     """
-    >>> wf = Wheel(name="foo")
+    >>> wf = Wheel(metadata=dict(Name="foo"))
 
     Ignore all the things SDist does (coherent-oss/coherent.build#33)
     >>> wf(types.SimpleNamespace(name='./.git'))
@@ -104,6 +116,10 @@ class Wheel(Filter):
         re.escape('(meta)'),
         re.escape('pyproject.toml'),
     ]
+
+    @property
+    def root(self):
+        return self.metadata['Name'].replace('.', '/')
 
 
 class ZipInfo(types.SimpleNamespace):
@@ -154,10 +170,9 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
         or Message.load()
         or Message.discover()
     )
-    root = metadata['Name'].replace('.', '/')
     filename = pathlib.Path(wheel_directory) / f'{metadata.id}-py3-none-any.whl'
     with WheelFile(filename, 'w') as zf:
-        for info in wheel_walk(Wheel(root)):
+        for info in wheel_walk(Wheel(metadata)):
             zf.write(info.path, arcname=info.name)
         for name, contents in metadata.render_wheel():
             zf.writestr(f'{metadata.id}.dist-info/{name}', contents)
@@ -168,7 +183,7 @@ def build_sdist(sdist_directory, config_settings=None):
     metadata = Message.discover()
     filename = pathlib.Path(sdist_directory) / f'{metadata.id}.tar.gz'
     with tarfile.open(filename, 'w:gz') as tf:
-        tf.add(pathlib.Path(), filter=SDist(metadata.id))
+        tf.add(pathlib.Path(), filter=SDist(metadata))
         tf.addfile(*make_sdist_metadata(metadata))
     return filename.name
 
