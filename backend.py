@@ -161,7 +161,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
             zf.write(info.path, arcname=info.name)
         for name, contents in metadata.render_wheel():
             zf.writestr(f'{metadata.id}.dist-info/{name}', contents)
-    return str(filename)
+    return filename.name
 
 
 def build_sdist(sdist_directory, config_settings=None):
@@ -170,7 +170,7 @@ def build_sdist(sdist_directory, config_settings=None):
     with tarfile.open(filename, 'w:gz') as tf:
         tf.add(pathlib.Path(), filter=SDist(metadata.id))
         tf.addfile(*make_sdist_metadata(metadata))
-    return str(filename)
+    return filename.name
 
 
 def build_editable(wheel_directory, config_settings=None, metadata_directory=None):
