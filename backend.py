@@ -66,10 +66,16 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     return filename.name
 
 
+sdist_backends = dict(
+    flit=layouts.FlitSDist,
+    coherent=layouts.SDist,
+)
+
+
 def build_sdist(sdist_directory, config_settings=None):
     metadata = Message.discover()
     filename = pathlib.Path(sdist_directory) / f'{metadata.id}.tar.gz'
-    layout = layouts.FlitSDist(metadata)
+    layout = sdist_backends[os.environ.get('SDIST_BACKEND', 'coherent')](metadata)
     with tarfile.open(filename, 'w:gz') as tf:
         tf.add(pathlib.Path(), filter=layout)
         consume(itertools.starmap(tf.addfile, layout.add_files()))
