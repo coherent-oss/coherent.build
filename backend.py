@@ -1,19 +1,18 @@
 from __future__ import annotations
 
-import io
+import itertools
 import os
 import pathlib
 import posixpath
 import tarfile
 import textwrap
-import time
 import types
 from collections.abc import Iterator
 
 from jaraco.functools import pass_none
+from more_itertools import consume
 from wheel.wheelfile import WheelFile
 
-from . import flit
 from . import layouts
 from .metadata import Message
 
@@ -40,22 +39,6 @@ def wheel_walk(filter_: layouts.Wheel) -> Iterator[ZipInfo]:
 
         children = (ZipInfo(path=os.path.join(root, file)) for file in files)
         yield from filter(bool, map(filter_, children))
-
-
-def make_tarinfo(filename, content):
-    info = tarfile.TarInfo(filename)
-    file = io.BytesIO(content.encode('utf-8'))
-    info.size = len(file.getbuffer())
-    info.mtime = time.time()
-    return info, file
-
-
-def make_sdist_metadata(metadata: Message) -> tarfile.TarInfo:
-    return make_tarinfo(f'{metadata.id}/PKG-INFO', metadata.render())
-
-
-def make_flit_project(metadata: Message) -> tarfile.TarInfo:
-    return make_tarinfo(f'{metadata.id}/pyproject.toml', flit.render(metadata))
 
 
 def prepare_metadata(metadata_directory, config_settings=None):
@@ -86,10 +69,10 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
 def build_sdist(sdist_directory, config_settings=None):
     metadata = Message.discover()
     filename = pathlib.Path(sdist_directory) / f'{metadata.id}.tar.gz'
+    layout = layouts.FlitSDist(metadata)
     with tarfile.open(filename, 'w:gz') as tf:
-        tf.add(pathlib.Path(), filter=layouts.FlitSDist(metadata))
-        tf.addfile(*make_sdist_metadata(metadata))
-        tf.addfile(*make_flit_project(metadata))
+        tf.add(pathlib.Path(), filter=layout)
+        consume(itertools.starmap(tf.addfile, layout.add_files()))
     return filename.name
 
 

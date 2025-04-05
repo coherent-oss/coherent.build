@@ -1,7 +1,11 @@
 import abc
+import io
 import pathlib
 import re
+import tarfile
+import time
 
+from . import flit
 from .metadata import Message
 
 
@@ -38,6 +42,14 @@ class Layout(abc.ABC):
         return info
 
 
+def make_tarinfo(filename, content):
+    info = tarfile.TarInfo(filename)
+    file = io.BytesIO(content.encode('utf-8'))
+    info.size = len(file.getbuffer())
+    info.mtime = time.time()
+    return info, file
+
+
 class SDist(Layout):
     """
     >>> import types
@@ -69,6 +81,9 @@ class SDist(Layout):
     def prefix(self, name):
         return self.metadata.id
 
+    def add_files(self):
+        yield make_tarinfo(f'{self.metadata.id}/PKG-INFO', self.metadata.render())
+
 
 class FlitSDist(SDist):
     """
@@ -96,6 +111,12 @@ class FlitSDist(SDist):
         if re.match(root_pattern, name):
             return pathlib.PurePath(self.metadata.id)
         return pathlib.PurePath(self.metadata.id, package)
+
+    def add_files(self):
+        yield from super().add_files()
+        yield make_tarinfo(
+            f'{self.metadata.id}/pyproject.toml', flit.render(self.metadata)
+        )
 
 
 class Wheel(Layout):
