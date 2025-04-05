@@ -10,7 +10,6 @@ import re
 from collections.abc import Iterable, Mapping
 
 import packaging
-import tomlkit
 
 from . import discovery
 
@@ -86,7 +85,7 @@ class Message(email.message.Message):
 
     @staticmethod
     def parse_contributor(combined):
-        exp = re.compile(r'(?P<name>.*) <(?P<email>.*)>$')
+        exp = re.compile(r'"?(?P<name>.*?)"? <(?P<email>.*)>$')
         return exp.match(combined).groupdict()
 
     @staticmethod
@@ -135,28 +134,23 @@ class Message(email.message.Message):
             )
 
     def render_toml(self):
-        tool_section = tomlkit.table()
-        project = tomlkit.table()
-        tool_section.add("project", project)
-
-        project.add("name", self["Name"])
-        project.add("version", self["Version"])
-        project.add("description", self["Summary"])
-        project.add("authors", [self.author])
         # todo: probably need to write out this file in case it was loaded elsewhere
         (readme,) = pathlib.Path().glob('README*')
-        project.add("readme", str(readme))
-        project.add("requires-python", self["Requires-Python"])
-        project.add("dependencies", self.get_all("Requires-Dist"))
-        project.add("classifiers", self.get_all("Classifier"))
 
-        urls = tomlkit.table(is_inline=True)
-        project.add("urls", urls)
-        for url in self.get_all("Project-URL"):
-            name, _, value = url.partition(', ')
-            urls.add(name, value)
+        project = {
+            "name": self["Name"],
+            "version": self["Version"],
+            "description": self["Summary"],
+            "authors": [self.author],
+            "readme": str(readme),
+            "requires-python": self["Requires-Python"],
+            "dependencies": self.get_all("Requires-Dist"),
+            "classifiers": self.get_all("Classifier"),
+            'urls': self.urls,
+        }
 
-        document = tomlkit.document()
-        document.add("tool", tool_section)
+        return dict(project=project)
 
-        return document
+    @property
+    def urls(self):
+        return dict(url.split(', ', 1) for url in self.get_all('Project-URL'))
