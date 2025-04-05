@@ -29,11 +29,10 @@ class Layout(abc.ABC):
         """
         self.metadata = metadata
 
-    @property
     @abc.abstractmethod
-    def root(self):
+    def prefix(self, name: str) -> str:
         """
-        Derives the root from the metadata.
+        Given the name, give its location.
         """
 
     def __call__(self, info):
@@ -42,13 +41,12 @@ class Layout(abc.ABC):
 
         Given an object like a tarfile.TarInfo object, determine if it
         should be included or filtered. Return None if the object should
-        be omitted. Otherwise, mutate the object to include self.root
-        as a prefix.
+        be omitted. Otherwise, relocate the object to self.prefix.
         """
         ignore_pattern = '|'.join(self.ignored)
         if info.name != '.' and re.match(ignore_pattern, info.name.removeprefix('./')):
             return
-        info.name = str(pathlib.PurePosixPath(self.root, info.name))
+        info.name = str(pathlib.PurePosixPath(self.prefix(info.name), info.name))
         return info
 
 
@@ -79,8 +77,7 @@ class SDist(Layout):
 
     ignored = ['dist$', r'(.*[/])?__pycache__$', r'(.*[/])?[.]']
 
-    @property
-    def root(self):
+    def prefix(self, name):
         return self.metadata.id
 
 
@@ -114,8 +111,7 @@ class Wheel(Layout):
         re.escape('pyproject.toml'),
     ]
 
-    @property
-    def root(self):
+    def prefix(self, name):
         return self.metadata['Name'].replace('.', '/')
 
 
