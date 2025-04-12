@@ -5,7 +5,6 @@ import re
 import tarfile
 import time
 
-from . import flit
 from .metadata import Message
 
 
@@ -83,40 +82,6 @@ class SDist(Layout):
 
     def add_files(self):
         yield make_tarinfo(f'{self.metadata.id}/PKG-INFO', self.metadata.render())
-
-
-class FlitSDist(SDist):
-    """
-    Customize the handling to generate a flit-compatible layout.
-
-    Puts README in the root, but the rest in the package.
-
-    >>> import types
-    >>> md = Message((('Name', 'foo'), ('Version', '1.0')))
-
-    >>> sf = FlitSDist(metadata=md)
-
-    >>> sf(types.SimpleNamespace(name='./bar.py'))
-    namespace(name='foo-1.0/foo/bar.py')
-
-    >>> sf(types.SimpleNamespace(name='./README.md'))
-    namespace(name='foo-1.0/README.md')
-    """
-
-    ignored = SDist.ignored + [re.escape('pyproject.toml')]
-
-    def prefix(self, name):
-        package = self.metadata['Name'].replace('.', '/')
-        root_pattern = '|'.join(Wheel.ignored)
-        if re.match(root_pattern, name):
-            return pathlib.PurePath(self.metadata.id)
-        return pathlib.PurePath(self.metadata.id, package)
-
-    def add_files(self):
-        yield from super().add_files()
-        yield make_tarinfo(
-            f'{self.metadata.id}/pyproject.toml', flit.render(self.metadata)
-        )
 
 
 class Wheel(Layout):

@@ -13,7 +13,7 @@ from jaraco.functools import pass_none
 from more_itertools import consume
 from wheel.wheelfile import WheelFile
 
-from . import layouts
+from . import flit, layouts
 from .metadata import Message
 
 
@@ -67,7 +67,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
 
 
 sdist_backends = dict(
-    flit=layouts.FlitSDist,
+    flit=flit.SDist,
     coherent=layouts.SDist,
 )
 
