@@ -149,7 +149,7 @@ class Message(email.message.Message):
             'urls': self.urls,
         }
 
-        return dict(project=project)
+        return project
 
     @property
     def urls(self):

@@ -1,9 +1,46 @@
 import pathlib
 import re
 
+import importlib_metadata as ilm
+import jaraco.functools
 import tomlkit
+from jaraco.context import suppress
 
 from . import layouts, metadata
+from .discovery import none_as
+
+unique = dict.fromkeys
+
+
+@jaraco.functools.apply(none_as({}))
+@suppress(FileNotFoundError)
+def entry_points(source='(meta)/entry_points.txt') -> dict[str, str]:
+    """
+    Parse any entry points found in (meta) as pyproject metadata.
+
+    >>> doc = entry_points('tests/entry points.txt')
+    >>> len(doc)
+    2
+    >>> doc['scripts']['flit']
+    'flit:main'
+    >>> doc['entry-points']['pygments.lexers']
+    {'dogelang': 'dogelang.lexer:DogeLexer'}
+
+    >>> entry_points('tests/does-not-exist')
+    {}
+    """
+    eps = ilm.EntryPoints(ilm.EntryPoints._from_text(pathlib.Path(source).read_text()))
+    scripts_keys = {'console_scripts', 'gui_scripts'}
+    scripts = {ep.name: ep.value for ep in eps if ep.group in scripts_keys}
+    other_groups = unique(ep.group for ep in eps if ep.group not in scripts_keys)
+    other_eps = {
+        group: {ep.name: ep.value for ep in eps.select(group=group)}
+        for group in other_groups
+    }
+    return dict(
+        {'entry-points': other_eps},
+        scripts=scripts,
+    )
 
 
 def render(metadata: metadata.Message):
@@ -13,7 +50,8 @@ def render(metadata: metadata.Message):
             'build-backend': 'flit_core.buildapi',
         }
     }
-    return tomlkit.dumps(system | metadata.render_toml())
+    project = dict(project=metadata.render_toml() | entry_points())
+    return tomlkit.dumps(system | project)
 
 
 class SDist(layouts.SDist):

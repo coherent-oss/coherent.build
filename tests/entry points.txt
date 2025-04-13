@@ -1,0 +1,8 @@
+# sample entry points txt file based on
+# https://flit.pypa.io/en/stable/pyproject_toml.html#scripts-section
+
+[console_scripts]
+flit = flit:main
+
+[pygments.lexers]
+dogelang = dogelang.lexer:DogeLexer
