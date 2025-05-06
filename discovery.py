@@ -444,6 +444,5 @@ def generate_classifiers():
         else 'Development Status :: 6 - Mature'
     )
     yield 'Intended Audience :: Developers'
-    yield 'License :: OSI Approved :: MIT License'
     yield 'Programming Language :: Python :: 3'
     yield 'Programming Language :: Python :: 3 :: Only'

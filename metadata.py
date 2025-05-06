@@ -105,6 +105,7 @@ class Message(email.message.Message):
         yield from discovery.description_from_readme()
         for classifier in discovery.generate_classifiers():
             yield 'Classifier', classifier
+        yield 'License-Expression', 'MIT'
 
     @classmethod
     def load(cls, info: str | pathlib.Path = pathlib.Path()):
@@ -147,6 +148,7 @@ class Message(email.message.Message):
             "dependencies": self.get_all("Requires-Dist"),
             "classifiers": self.get_all("Classifier"),
             'urls': self.urls,
+            'license': self['License-Expression'],
         }
 
         return project
