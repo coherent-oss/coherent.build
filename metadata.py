@@ -90,7 +90,7 @@ class Message(email.message.Message):
 
     @staticmethod
     def _discover_fields():
-        yield 'Metadata-Version', '2.3'
+        yield 'Metadata-Version', '2.4'
         yield 'Name', discovery.best_name()
         yield 'Version', discovery.version_from_vcs()
         yield 'Author-Email', discovery.author_from_vcs()
