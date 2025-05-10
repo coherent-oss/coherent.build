@@ -59,10 +59,14 @@ class Message(email.message.Message):
         for item in always_items(values):
             self.add_header(*item)
 
+    @contextlib.contextmanager
     def _description_in_payload(self):
-        if 'Description' in self:
-            self.set_payload(self['Description'])
-            del self['Description']
+        desc = self['Description']
+        del self['Description']
+        self.set_payload(desc)
+        yield
+        self.set_payload(None)
+        self['Description'] = desc
 
     @property
     def id(self):
@@ -113,8 +117,8 @@ class Message(email.message.Message):
         return (md or None) and cls(md)
 
     def render(self):
-        self._description_in_payload()
-        return str(self)
+        with self._description_in_payload():
+            return str(self)
 
     def render_wheel(self):
         """
