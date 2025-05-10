@@ -11,6 +11,7 @@ import operator
 import pathlib
 import re
 import subprocess
+import sys
 import types
 import urllib.parse
 from collections.abc import Mapping
@@ -310,7 +311,7 @@ class Contributor(types.SimpleNamespace):
 @suppress(Exception)
 def author_from_vcs():
     # run git-fame twice to get both name and email
-    cmd = ['git-fame', '--format', 'json']
+    cmd = [sys.executable, '-m', 'gitfame', '--format', 'json']
     names_data = json.loads(
         subprocess.check_output(
             cmd,
