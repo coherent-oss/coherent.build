@@ -1,5 +1,6 @@
 import abc
 import io
+import itertools
 import pathlib
 import re
 import tarfile
@@ -81,7 +82,10 @@ class SDist(Layout):
         return self.metadata.id
 
     def add_files(self):
-        yield make_tarinfo(f'{self.metadata.id}/PKG-INFO', self.metadata.render())
+        yield from itertools.starmap(make_tarinfo, self.gen_files())
+
+    def gen_files(self):
+        yield f'{self.metadata.id}/PKG-INFO', self.metadata.render()
 
 
 class Wheel(Layout):

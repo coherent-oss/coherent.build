@@ -82,8 +82,6 @@ class SDist(layouts.SDist):
             return pathlib.PurePath(self.metadata.id)
         return pathlib.PurePath(self.metadata.id, package)
 
-    def add_files(self):
-        yield from super().add_files()
-        yield layouts.make_tarinfo(
-            f'{self.metadata.id}/pyproject.toml', render(self.metadata)
-        )
+    def gen_files(self):
+        yield from super().gen_files()
+        yield f'{self.metadata.id}/pyproject.toml', render(self.metadata)
