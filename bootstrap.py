@@ -27,7 +27,7 @@ def assured(
     if target.exists():
         yield
         return
-    target.write_text(content_factory())
+    target.write_text(content_factory(), encoding='utf-8')
     try:
         yield
     finally:

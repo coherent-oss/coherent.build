@@ -47,7 +47,7 @@ def prepare_metadata(metadata_directory, config_settings=None):
     md_root = pathlib.Path(metadata_directory, f'{metadata.id}.dist-info')
     md_root.mkdir()
     for name, contents in metadata.render_wheel():
-        md_root.joinpath(name).write_text(contents)
+        md_root.joinpath(name).write_text(contents, encoding='utf-8')
     return md_root.name
 
 
