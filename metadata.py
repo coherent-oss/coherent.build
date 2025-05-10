@@ -5,6 +5,7 @@ import email.message
 import email.policy
 import functools
 import importlib.metadata
+import mimetypes
 import pathlib
 import re
 from collections.abc import Iterable, Mapping
@@ -139,15 +140,12 @@ class Message(email.message.Message):
             )
 
     def render_toml(self):
-        # todo: probably need to write out this file in case it was loaded elsewhere
-        (readme,) = pathlib.Path().glob('README*')
-
         project = {
             "name": self["Name"],
             "version": self["Version"],
             "description": self["Summary"],
             "authors": [self.author],
-            "readme": str(readme),
+            "readme": self.readme_filename,
             "requires-python": self["Requires-Python"],
             "dependencies": self.get_all("Requires-Dist"),
             "classifiers": self.get_all("Classifier"),
@@ -156,6 +154,10 @@ class Message(email.message.Message):
         }
 
         return project
+
+    @property
+    def readme_filename(self):
+        return f'README{mimetypes.guess_extension(self["Description-Content-Type"])}'
 
     @property
     def urls(self):

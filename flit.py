@@ -58,22 +58,43 @@ class SDist(layouts.SDist):
     """
     Customize the handling to generate a flit-compatible layout.
 
-    Puts README in the root, but the rest in the package.
+    Puts some resources in the root, but the code in the package.
 
     >>> import types
     >>> from .metadata import Message
-    >>> md = Message((('Name', 'foo'), ('Version', '1.0')))
+    >>> md = Message.discover()
+    >>> md.replace_header('Name', 'foo')
+    >>> md.replace_header('Version', '1.0')
 
     >>> sf = SDist(metadata=md)
 
     >>> sf(types.SimpleNamespace(name='./bar.py'))
     namespace(name='foo-1.0/foo/bar.py')
 
+    README is excluded.
+
     >>> sf(types.SimpleNamespace(name='./README.md'))
-    namespace(name='foo-1.0/README.md')
+
+    README is rendered from the metadata and has badges.
+
+    >>> files = dict(sf.gen_files())
+    >>> 'Coherent' in files['foo-1.0/README.md']
+    True
+    >>> 'shields.io' in files['foo-1.0/README.md']
+    True
+
+    reStructuredText is also supported.
+
+    >>> md.replace_header('Description-Content-Type', 'text/x-rst')
+    >>> files = dict(sf.gen_files())
+    >>> 'foo-1.0/README.rst' in files
+    True
     """
 
-    ignored = layouts.SDist.ignored + [re.escape('pyproject.toml')]
+    ignored = layouts.SDist.ignored + [
+        re.escape('pyproject.toml'),
+        r'README\.\w+',
+    ]
 
     def prefix(self, name):
         package = self.metadata['Name'].replace('.', '/')
@@ -85,3 +106,7 @@ class SDist(layouts.SDist):
     def gen_files(self):
         yield from super().gen_files()
         yield f'{self.metadata.id}/pyproject.toml', render(self.metadata)
+        yield (
+            f'{self.metadata.id}/{self.metadata.readme_filename}',
+            self.metadata['Description'],
+        )
