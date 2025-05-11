@@ -1,6 +1,7 @@
 import pathlib
 import re
 
+import coherent.licensed
 import importlib_metadata as ilm
 import jaraco.functools
 import tomlkit
@@ -89,6 +90,11 @@ class SDist(layouts.SDist):
     >>> files = dict(sf.gen_files())
     >>> 'foo-1.0/README.rst' in files
     True
+
+    The license file is injected.
+
+    >>> files['LICENSE']
+    'MIT License...'
     """
 
     ignored = layouts.SDist.ignored + [
@@ -110,3 +116,4 @@ class SDist(layouts.SDist):
             f'{self.metadata.id}/{self.metadata.readme_filename}',
             self.metadata['Description'],
         )
+        yield 'LICENSE', coherent.licensed.resolve(self.metadata['License-Expression'])
