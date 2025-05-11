@@ -79,16 +79,16 @@ class SDist(layouts.SDist):
     README is rendered from the metadata and has badges.
 
     >>> files = dict(sf.gen_files())
-    >>> 'Coherent' in files['foo-1.0/README.md']
+    >>> 'Coherent' in files['README.md']
     True
-    >>> 'shields.io' in files['foo-1.0/README.md']
+    >>> 'shields.io' in files['README.md']
     True
 
     reStructuredText is also supported.
 
     >>> md.replace_header('Description-Content-Type', 'text/x-rst')
     >>> files = dict(sf.gen_files())
-    >>> 'foo-1.0/README.rst' in files
+    >>> 'README.rst' in files
     True
 
     The license file is injected.
@@ -104,16 +104,13 @@ class SDist(layouts.SDist):
 
     def prefix(self, name):
         package = self.metadata['Name'].replace('.', '/')
-        root_pattern = '|'.join(layouts.Wheel.ignored)
+        root_pattern = '|'.join(layouts.Wheel.ignored + ['LICENSE'])
         if re.match(root_pattern, name):
             return pathlib.PurePath(self.metadata.id)
         return pathlib.PurePath(self.metadata.id, package)
 
     def gen_files(self):
         yield from super().gen_files()
-        yield f'{self.metadata.id}/pyproject.toml', render(self.metadata)
-        yield (
-            f'{self.metadata.id}/{self.metadata.readme_filename}',
-            self.metadata['Description'],
-        )
+        yield 'pyproject.toml', render(self.metadata)
+        yield self.metadata.readme_filename, self.metadata['Description']
         yield 'LICENSE', coherent.licensed.resolve(self.metadata['License-Expression'])
