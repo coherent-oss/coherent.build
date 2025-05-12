@@ -147,8 +147,8 @@ class Message(email.message.Message):
             "authors": [self.author],
             "readme": self.readme_filename,
             "requires-python": self["Requires-Python"],
-            "dependencies": self.get_all("Requires-Dist"),
-            "classifiers": self.get_all("Classifier"),
+            "dependencies": self.get_all("Requires-Dist") or [],
+            "classifiers": self.get_all("Classifier") or [],
             'urls': self.urls,
             'license': self['License-Expression'],
         }
