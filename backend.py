@@ -75,7 +75,7 @@ sdist_backends = dict(
 def build_sdist(sdist_directory, config_settings=None):
     metadata = Message.discover()
     filename = pathlib.Path(sdist_directory) / f'{metadata.id}.tar.gz'
-    layout = sdist_backends[os.environ.get('SDIST_BACKEND', 'coherent')](metadata)
+    layout = sdist_backends[os.environ.get('SDIST_BACKEND', 'flit')](metadata)
     with tarfile.open(filename, 'w:gz') as tf:
         tf.add(pathlib.Path(), filter=layout)
         consume(itertools.starmap(tf.addfile, layout.add_files()))
