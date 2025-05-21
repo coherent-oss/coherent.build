@@ -107,7 +107,7 @@ class Message(email.message.Message):
         for extra in discovery.full_extras(discovery.extras_from_deps(deps)):
             yield 'Provides-Extra', extra
         yield 'Project-URL', f'Source, {discovery.source_url()}'
-        yield from discovery.description_from_readme()
+        yield from discovery.best_description()
         for classifier in discovery.generate_classifiers():
             yield 'Classifier', classifier
         yield 'License-Expression', 'MIT'
