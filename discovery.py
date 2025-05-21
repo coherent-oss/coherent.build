@@ -443,7 +443,7 @@ def degenerate_description():
     Render an empty, degenerate description.
     """
     yield 'Description-Content-Type', 'text/markdown'
-    yield 'Description', ''
+    yield 'Description', inject_badges('')
 
 
 def age_of_repo():
