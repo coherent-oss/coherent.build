@@ -438,6 +438,12 @@ def description_from_readme():
         yield 'Description', inject_badges(readme.read_text(encoding='utf-8'), ct)
 
 
+def description_from_init():
+    """
+    TODO: load the content from __init__.__doc__.
+    """
+
+
 def degenerate_description():
     """
     Render an empty, degenerate description.
