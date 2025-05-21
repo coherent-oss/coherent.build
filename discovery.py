@@ -423,10 +423,12 @@ def render_badges(type):
 
 
 def best_description():
-    return itertools.islice(
+    ct, desc = itertools.islice(
         itertools.chain(description_from_readme(), degenerate_description()),
         2,
     )
+    yield 'Description-Content-Type', ct
+    yield 'Description', inject_badges(desc, ct)
 
 
 def description_from_readme():
@@ -434,16 +436,16 @@ def description_from_readme():
         (readme,) = pathlib.Path().glob('README*')
         ct = guess_content_type(readme)
         assert ct
-        yield 'Description-Content-Type', ct
-        yield 'Description', inject_badges(readme.read_text(encoding='utf-8'), ct)
+        yield ct
+        yield readme.read_text(encoding='utf-8')
 
 
 def degenerate_description():
     """
     Render an empty, degenerate description.
     """
-    yield 'Description-Content-Type', 'text/markdown'
-    yield 'Description', inject_badges('')
+    yield 'text/markdown'
+    yield ''
 
 
 def age_of_repo():
