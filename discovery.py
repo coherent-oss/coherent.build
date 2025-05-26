@@ -298,49 +298,30 @@ def full_extras(deps):
     return deps
 
 
-def _to_mapping(fame):
-    return (dict(zip(fame['columns'], row)) for row in fame['data'])
-
-
-class Contributor(types.SimpleNamespace):
-    @property
-    def combined_detail(self):
-        return f'"{self.name}" <{self.email}>'
+def _to_objects(fame):
+    return (
+        types.SimpleNamespace(dict(zip(fame['columns'], row))) for row in fame['data']
+    )
 
 
 @suppress(Exception)
 def author_from_vcs():
-    # run git-fame twice to get both name and email
-    cmd = [sys.executable, '-m', 'gitfame', '--format', 'json']
-    names_data = json.loads(
-        subprocess.check_output(
-            cmd,
-            text=True,
-            encoding='utf-8',
-            stderr=subprocess.DEVNULL,
+    """
+    >>> author_from_vcs()
+    'Jason R. Coombs <jaraco@jaraco.com>'
+    """
+    cmd = [sys.executable, '-m', 'gitfame', '--format', 'json', '--show', 'name,email']
+    contribs = _to_objects(
+        json.loads(
+            subprocess.check_output(
+                cmd,
+                text=True,
+                encoding='utf-8',
+                stderr=subprocess.DEVNULL,
+            )
         )
     )
-    emails_data = json.loads(
-        subprocess.check_output(
-            cmd + ['--show-email'],
-            text=True,
-            encoding='utf-8',
-            stderr=subprocess.DEVNULL,
-        )
-    )
-    names_data['columns'][0] = 'name'
-    emails_data['columns'][0] = 'email'
-    emails_contribs = _to_mapping(emails_data)
-    names_contribs = _to_mapping(names_data)
-
-    contribs = (
-        Contributor(**val)
-        for val in (
-            {**name_contrib, **email_contrib}
-            for name_contrib, email_contrib in zip(names_contribs, emails_contribs)
-        )
-    )
-    return next(contribs).combined_detail
+    return next(contribs).Author
 
 
 def guess_content_type(path: pathlib.Path):
