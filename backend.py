@@ -94,7 +94,7 @@ def build_editable(wheel_directory, config_settings=None, metadata_directory=Non
         zf.writestr(f'{root}/__init__.py', proxy())
         for name, contents in metadata.render_wheel():
             zf.writestr(f'{metadata.id}.dist-info/{name}', contents)
-    return str(filename)
+    return filename.name
 
 
 def proxy():
