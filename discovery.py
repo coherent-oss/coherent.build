@@ -28,6 +28,7 @@ from packaging.version import Version
 from pip_run import scripts
 
 from ..deps import imports, pypi
+from .compat.py312 import SimpleNamespacePos
 
 log = logging.getLogger(__name__)
 
@@ -299,9 +300,7 @@ def full_extras(deps):
 
 
 def _to_objects(fame):
-    return (
-        types.SimpleNamespace(dict(zip(fame['columns'], row))) for row in fame['data']
-    )
+    return (SimpleNamespacePos(dict(zip(fame['columns'], row))) for row in fame['data'])
 
 
 @suppress(Exception)
