@@ -1,6 +1,6 @@
 import contextlib
 import pathlib
-from typing import Callable
+from collections.abc import Callable
 
 from .compat.py311 import importlib
 
