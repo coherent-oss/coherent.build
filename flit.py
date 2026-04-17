@@ -94,7 +94,7 @@ class SDist(layouts.SDist):
     The license file is injected.
 
     >>> files['LICENSE']
-    'MIT License...'
+    'Apache License...'
     """
 
     ignored = layouts.SDist.ignored + [
