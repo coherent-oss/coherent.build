@@ -182,24 +182,29 @@ def declared_deps():
     return scripts.DepsReader.search(['__init__.py'])
 
 
-@suppress(Exception)
 def declared_license():
     """
     Read license from ``__init__.py``.
 
     Returns None if no ``__license__`` is declared.
     """
-    source = pathlib.Path('__init__.py').read_text(encoding='utf-8')
+    try:
+        source = pathlib.Path('__init__.py').read_text(encoding='utf-8')
+    except FileNotFoundError:
+        return None
     mod = ast.parse(source)
-    (node,) = (
-        node
-        for node in mod.body
-        if isinstance(node, ast.Assign)
-        and len(node.targets) == 1
-        and isinstance(node.targets[0], ast.Name)
-        and node.targets[0].id == '__license__'
+    node = next(
+        (
+            node
+            for node in mod.body
+            if isinstance(node, ast.Assign)
+            and len(node.targets) == 1
+            and isinstance(node.targets[0], ast.Name)
+            and node.targets[0].id == '__license__'
+        ),
+        None,
     )
-    return ast.literal_eval(node.value)
+    return ast.literal_eval(node.value) if node is not None else None
 
 
 def source_files():
