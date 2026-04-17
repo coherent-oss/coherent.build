@@ -1,3 +1,8 @@
 import importlib.metadata
 
-MetadataNotFound = getattr(importlib.metadata, 'MetadataNotFound', None)
+
+class Never(Exception):
+    pass
+
+
+MetadataNotFound = getattr(importlib.metadata, 'MetadataNotFound', Never)
