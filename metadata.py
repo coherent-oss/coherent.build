@@ -110,7 +110,7 @@ class Message(email.message.Message):
         yield from discovery.best_description()
         for classifier in discovery.generate_classifiers():
             yield 'Classifier', classifier
-        yield 'License-Expression', 'Apache-2.0'
+        yield 'License-Expression', discovery.declared_license() or 'Apache-2.0'
 
     @classmethod
     def load(cls, info: str | pathlib.Path = pathlib.Path()):

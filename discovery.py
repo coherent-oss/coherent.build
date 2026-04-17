@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import contextlib
 import datetime
 import functools
@@ -179,6 +180,26 @@ def declared_deps():
     Read deps from ``__init__.py``.
     """
     return scripts.DepsReader.search(['__init__.py'])
+
+
+@suppress(Exception)
+def declared_license():
+    """
+    Read license from ``__init__.py``.
+
+    Returns None if no ``__license__`` is declared.
+    """
+    source = pathlib.Path('__init__.py').read_text(encoding='utf-8')
+    mod = ast.parse(source)
+    (node,) = (
+        node
+        for node in mod.body
+        if isinstance(node, ast.Assign)
+        and len(node.targets) == 1
+        and isinstance(node.targets[0], ast.Name)
+        and node.targets[0].id == '__license__'
+    )
+    return ast.literal_eval(node.value)
 
 
 def source_files():
