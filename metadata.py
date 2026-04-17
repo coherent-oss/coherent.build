@@ -15,7 +15,7 @@ from jaraco.context import suppress
 
 from . import discovery
 
-_MetadataNotFound = getattr(importlib.metadata, 'MetadataNotFound', None)
+_MetadataNotFound = getattr(importlib.metadata, 'MetadataNotFound', importlib.metadata.PackageNotFoundError)
 
 
 def _normalize(name):
