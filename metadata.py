@@ -14,6 +14,7 @@ import packaging
 from jaraco.context import suppress
 
 from . import discovery
+from .compat.py314 import MetadataNotFound
 
 
 def _normalize(name):
@@ -114,7 +115,7 @@ class Message(email.message.Message):
         yield 'License-Expression', 'Apache-2.0'
 
     @classmethod
-    @suppress(getattr(importlib.metadata, 'MetadataNotFound', None))
+    @suppress(MetadataNotFound)
     def load(cls, info: str | pathlib.Path = pathlib.Path()):
         md = importlib.metadata.PathDistribution(pathlib.Path(info)).metadata
         return (md or None) and cls(md)
