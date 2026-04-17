@@ -114,8 +114,9 @@ class Message(email.message.Message):
 
     @classmethod
     def load(cls, info: str | pathlib.Path = pathlib.Path()):
-        md = importlib.metadata.PathDistribution(pathlib.Path(info)).metadata
-        return (md or None) and cls(md)
+        with contextlib.suppress(importlib.metadata.PackageNotFoundError):
+            md = importlib.metadata.PathDistribution(pathlib.Path(info)).metadata
+            return (md or None) and cls(md)
 
     def render(self):
         with self._description_in_payload():
