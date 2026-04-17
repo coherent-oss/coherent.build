@@ -11,8 +11,11 @@ import re
 from collections.abc import Iterable, Mapping
 
 import packaging
+from jaraco.context import suppress
 
 from . import discovery
+
+_MetadataNotFound = getattr(importlib.metadata, 'MetadataNotFound', None)
 
 
 def _normalize(name):
@@ -113,10 +116,10 @@ class Message(email.message.Message):
         yield 'License-Expression', 'Apache-2.0'
 
     @classmethod
+    @suppress(_MetadataNotFound)
     def load(cls, info: str | pathlib.Path = pathlib.Path()):
-        with contextlib.suppress(importlib.metadata.PackageNotFoundError):
-            md = importlib.metadata.PathDistribution(pathlib.Path(info)).metadata
-            return (md or None) and cls(md)
+        md = importlib.metadata.PathDistribution(pathlib.Path(info)).metadata
+        return (md or None) and cls(md)
 
     def render(self):
         with self._description_in_payload():
