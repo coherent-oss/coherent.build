@@ -181,17 +181,15 @@ def declared_deps():
     return scripts.DepsReader.search(['__init__.py'])
 
 
+@suppress(FileNotFoundError, ValueError)
 def declared_license():
     """
     Read license from ``__init__.py``.
 
     Returns None if no ``__license__`` is declared.
     """
-    try:
-        reader = scripts.SourceDepsReader.load(pathlib.Path('__init__.py'))
-        return reader._read('__license__')
-    except (FileNotFoundError, ValueError):
-        return None
+    reader = scripts.SourceDepsReader.load(pathlib.Path('__init__.py'))
+    return reader._read('__license__')
 
 
 def source_files():
