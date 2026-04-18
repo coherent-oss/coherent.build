@@ -188,16 +188,13 @@ def declared_license():
 
     Returns None if no ``__license__`` is declared.
 
-    >>> import os, pathlib, tempfile
-    >>> _tmp = tempfile.mkdtemp()
-    >>> _saved = os.getcwd()
-    >>> os.chdir(_tmp)
-    >>> declared_license() is None
-    True
-    >>> _ = pathlib.Path('__init__.py').write_text('__license__ = "MIT"\\n')
+    >>> declared_license()
+    >>> monkeypatch = getfixture('monkeypatch')
+    >>> tmp_path = getfixture('tmp_path')
+    >>> monkeypatch.chdir(tmp_path)
+    >>> _ = (tmp_path / '__init__.py').write_text('__license__ = "MIT"\\n')
     >>> declared_license()
     'MIT'
-    >>> os.chdir(_saved)
     """
     reader = scripts.SourceDepsReader.load(pathlib.Path('__init__.py'))
     return reader._read('__license__')
