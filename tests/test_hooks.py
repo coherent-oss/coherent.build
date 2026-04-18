@@ -1,7 +1,4 @@
-import pathlib
-
 import coherent.build.backend
-import coherent.build.discovery
 
 
 def test_prepared_metadata(tmp_path, monkeypatch):
