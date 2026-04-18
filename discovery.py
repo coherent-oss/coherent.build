@@ -181,6 +181,25 @@ def declared_deps():
     return scripts.DepsReader.search(['__init__.py'])
 
 
+@suppress(FileNotFoundError, ValueError)
+def declared_license():
+    """
+    Read license from ``__init__.py``.
+
+    Returns None if no ``__license__`` is declared.
+
+    >>> declared_license()
+    >>> monkeypatch = getfixture('monkeypatch')
+    >>> tmp_path = getfixture('tmp_path')
+    >>> monkeypatch.chdir(tmp_path)
+    >>> _ = (tmp_path / '__init__.py').write_text('__license__ = "MIT"\\n')
+    >>> declared_license()
+    'MIT'
+    """
+    reader = scripts.SourceDepsReader.load(pathlib.Path('__init__.py'))
+    return reader._read('__license__')
+
+
 def source_files():
     """
     Return all files in the source distribution.
