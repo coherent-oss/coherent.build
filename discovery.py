@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import contextlib
 import datetime
 import functools
@@ -23,7 +24,7 @@ import packaging.requirements
 import requests
 import setuptools_scm
 from jaraco.context import suppress
-from more_itertools import unique_everseen
+from more_itertools import always_iterable, unique_everseen
 from packaging.version import Version
 from pip_run import scripts
 
@@ -423,7 +424,11 @@ def render_badges(type):
 
 def best_description():
     ct, desc = itertools.islice(
-        itertools.chain(description_from_readme(), degenerate_description()),
+        itertools.chain(
+            description_from_readme(),
+            description_from_package_docstring(),
+            degenerate_description(),
+        ),
         2,
     )
     yield 'Description-Content-Type', ct
@@ -437,6 +442,26 @@ def description_from_readme():
         assert ct
         yield ct
         yield readme.read_text(encoding='utf-8')
+
+
+@jaraco.functools.apply(always_iterable)
+@suppress(FileNotFoundError, SyntaxError)
+def description_from_package_docstring():
+    """
+    Infer description from the package docstring in ``__init__.py``.
+
+    Returns nothing if no ``__init__.py`` is present or it has no docstring.
+
+    >>> monkeypatch = getfixture('monkeypatch')
+    >>> tmp_path = getfixture('tmp_path')
+    >>> monkeypatch.chdir(tmp_path)
+    >>> _ = (tmp_path / '__init__.py').write_text('\"""A package.\"""\\n')
+    >>> list(description_from_package_docstring())
+    ['text/x-rst', 'A package.']
+    """
+    source = pathlib.Path('__init__.py').read_text(encoding='utf-8')
+    docstring = ast.get_docstring(ast.parse(source))
+    return ['text/x-rst', docstring] * bool(docstring)
 
 
 def degenerate_description():
