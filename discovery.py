@@ -444,6 +444,12 @@ def description_from_readme():
         yield readme.read_text(encoding='utf-8')
 
 
+@suppress(FileNotFoundError, SyntaxError)
+def _package_docstring():
+    source = pathlib.Path('__init__.py').read_text(encoding='utf-8')
+    return ast.get_docstring(ast.parse(source))
+
+
 def description_from_package_docstring():
     """
     Infer description from the package docstring in ``__init__.py``.
@@ -457,11 +463,8 @@ def description_from_package_docstring():
     >>> list(description_from_package_docstring())
     ['text/x-rst', 'A package.']
     """
-    with contextlib.suppress(FileNotFoundError, SyntaxError):
-        source = pathlib.Path('__init__.py').read_text(encoding='utf-8')
-        tree = ast.parse(source)
-        docstring = ast.get_docstring(tree)
-        yield from ['text/x-rst', docstring] * bool(docstring)
+    docstring = _package_docstring()
+    yield from ['text/x-rst', docstring] * bool(docstring)
 
 
 def degenerate_description():
