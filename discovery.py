@@ -461,9 +461,7 @@ def description_from_package_docstring():
         source = pathlib.Path('__init__.py').read_text(encoding='utf-8')
         tree = ast.parse(source)
         docstring = ast.get_docstring(tree)
-        if docstring:
-            yield 'text/x-rst'
-            yield docstring
+        yield from ['text/x-rst', docstring] * bool(docstring)
 
 
 def degenerate_description():
