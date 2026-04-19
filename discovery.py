@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import contextlib
 import datetime
 import functools
@@ -423,7 +424,11 @@ def render_badges(type):
 
 def best_description():
     ct, desc = itertools.islice(
-        itertools.chain(description_from_readme(), degenerate_description()),
+        itertools.chain(
+            description_from_readme(),
+            description_from_package_docstring(),
+            degenerate_description(),
+        ),
         2,
     )
     yield 'Description-Content-Type', ct
@@ -437,6 +442,28 @@ def description_from_readme():
         assert ct
         yield ct
         yield readme.read_text(encoding='utf-8')
+
+
+def description_from_package_docstring():
+    """
+    Infer description from the package docstring in ``__init__.py``.
+
+    Returns nothing if no ``__init__.py`` is present or it has no docstring.
+
+    >>> monkeypatch = getfixture('monkeypatch')
+    >>> tmp_path = getfixture('tmp_path')
+    >>> monkeypatch.chdir(tmp_path)
+    >>> _ = (tmp_path / '__init__.py').write_text('"""A package."""\\n')
+    >>> list(description_from_package_docstring())
+    ['text/x-rst', 'A package.']
+    """
+    with contextlib.suppress(FileNotFoundError, SyntaxError):
+        source = pathlib.Path('__init__.py').read_text(encoding='utf-8')
+        tree = ast.parse(source)
+        docstring = ast.get_docstring(tree)
+        if docstring:
+            yield 'text/x-rst'
+            yield docstring
 
 
 def degenerate_description():
