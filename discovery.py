@@ -459,7 +459,7 @@ def description_from_package_docstring():
     >>> monkeypatch = getfixture('monkeypatch')
     >>> tmp_path = getfixture('tmp_path')
     >>> monkeypatch.chdir(tmp_path)
-    >>> _ = (tmp_path / '__init__.py').write_text('"""A package."""\\n')
+    >>> _ = (tmp_path / '__init__.py').write_text('\"\"\"A package.\"\"\"\\n')
     >>> list(description_from_package_docstring())
     ['text/x-rst', 'A package.']
     """
