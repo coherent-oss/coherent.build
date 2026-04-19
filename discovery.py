@@ -426,7 +426,7 @@ def best_description():
     ct, desc = itertools.islice(
         itertools.chain(
             description_from_readme(),
-            description_from_package_docstring() or (),
+            description_from_package_docstring(),
             degenerate_description(),
         ),
         2,
@@ -445,6 +445,11 @@ def description_from_readme():
 
 
 @suppress(FileNotFoundError, SyntaxError)
+def _package_docstring():
+    source = pathlib.Path('__init__.py').read_text(encoding='utf-8')
+    return ast.get_docstring(ast.parse(source))
+
+
 def description_from_package_docstring():
     """
     Infer description from the package docstring in ``__init__.py``.
@@ -455,12 +460,11 @@ def description_from_package_docstring():
     >>> tmp_path = getfixture('tmp_path')
     >>> monkeypatch.chdir(tmp_path)
     >>> _ = (tmp_path / '__init__.py').write_text('"""A package."""\\n')
-    >>> description_from_package_docstring()
+    >>> list(description_from_package_docstring())
     ['text/x-rst', 'A package.']
     """
-    source = pathlib.Path('__init__.py').read_text(encoding='utf-8')
-    docstring = ast.get_docstring(ast.parse(source))
-    return ['text/x-rst', docstring] * bool(docstring)
+    docstring = _package_docstring()
+    yield from ['text/x-rst', docstring] * bool(docstring)
 
 
 def degenerate_description():
