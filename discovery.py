@@ -24,7 +24,7 @@ import packaging.requirements
 import requests
 import setuptools_scm
 from jaraco.context import suppress
-from more_itertools import unique_everseen
+from more_itertools import always_iterable, unique_everseen
 from packaging.version import Version
 from pip_run import scripts
 
@@ -444,12 +444,8 @@ def description_from_readme():
         yield readme.read_text(encoding='utf-8')
 
 
+@jaraco.functools.apply(always_iterable)
 @suppress(FileNotFoundError, SyntaxError)
-def _package_docstring():
-    source = pathlib.Path('__init__.py').read_text(encoding='utf-8')
-    return ast.get_docstring(ast.parse(source))
-
-
 def description_from_package_docstring():
     """
     Infer description from the package docstring in ``__init__.py``.
@@ -463,8 +459,9 @@ def description_from_package_docstring():
     >>> list(description_from_package_docstring())
     ['text/x-rst', 'A package.']
     """
-    docstring = _package_docstring()
-    yield from ['text/x-rst', docstring] * bool(docstring)
+    source = pathlib.Path('__init__.py').read_text(encoding='utf-8')
+    docstring = ast.get_docstring(ast.parse(source))
+    return ['text/x-rst', docstring] * bool(docstring)
 
 
 def degenerate_description():
