@@ -121,5 +121,29 @@ class Wheel(Layout):
         re.escape('pyproject.toml'),
     ]
 
+    def __call__(self, info):
+        info.name = info.name.removeprefix('./')
+        ignore_pattern = '|'.join(self.ignored)
+        if info.name != '.' and re.match(ignore_pattern, info.name):
+            return
+
+        source = pathlib.PurePosixPath(info.name)
+        package = pathlib.PurePosixPath(self.prefix(info.name))
+
+        if info.name == '.':
+            return info
+
+        if package.parts[: len(source.parts)] == source.parts:
+            return info
+
+        if source.parts[: len(package.parts)] == package.parts:
+            return info
+
+        if len(package.parts) == 1 and source == package.with_suffix('.py'):
+            return info
+
+        info.name = str(pathlib.PurePosixPath(package, source))
+        return info
+        
     def prefix(self, name):
         return self.metadata['Name'].replace('.', '/')
