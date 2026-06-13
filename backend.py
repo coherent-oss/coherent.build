@@ -92,15 +92,20 @@ def build_editable(wheel_directory, config_settings=None, metadata_directory=Non
     filename = pathlib.Path(wheel_directory) / f'{metadata.id}-py3-none-any.whl'
     with WheelFile(filename, 'w') as zf:
         zf.writestr(f'{root}/__init__.py', proxy())
+        zf.writestr(f"{metadata['Name']}-redirects.pth", pth_redirect(metadata['Name']))
         for name, contents in metadata.render_wheel():
             zf.writestr(f'{metadata.id}.dist-info/{name}', contents)
     return filename.name
 
 
+def package_root():
+    return os.getcwd()
+
+
 def proxy():
     return textwrap.dedent(f"""
         import io
-        __path__ = [{os.getcwd()!r}]
+        __path__ = [{package_root()!r}]
         __file__ = __path__[0] + '/__init__.py'
         try:
             strm = io.open_code(__file__)
@@ -110,3 +115,7 @@ def proxy():
             with strm:
                 exec(compile(strm.read(), __file__, 'exec'))
         """).lstrip()
+
+
+def pth_redirect(package_name):
+    return f'# import redirect {package_name} -> {package_root()}\n'
