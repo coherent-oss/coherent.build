@@ -34,5 +34,5 @@ def test_editable_pth_redirect(tmp_path):
         pth_contents = zf.read(pth_file).decode()
     assert pth_contents.startswith('# import redirect ')
     pkg_name = pth_file.removesuffix('-redirects.pth')
-    cwd = os.getcwd()
-    assert pth_contents.strip() == f'# import redirect {pkg_name} -> {cwd}'
+    package_root = os.getcwd()
+    assert pth_contents.strip() == f'# import redirect {pkg_name} -> {package_root}'
