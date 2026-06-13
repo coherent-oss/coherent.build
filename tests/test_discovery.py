@@ -1,7 +1,5 @@
 import importlib.metadata
 
-import pytest
-
 import coherent.build.discovery as discovery
 
 
