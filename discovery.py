@@ -171,8 +171,12 @@ def python_requires_supported():
     try:
         min_ver = branches[0]["name"]
     except KeyError:
-        log.warning(f"Unexpected {branches=}")
-        return _python_requires_from_self()
+        fallback = _python_requires_from_self()
+        log.warning(
+            f"Failed to determine supported Python versions from CPython; "
+            f"Unexpected {branches=}; using {fallback}"
+        )
+        return fallback
     return f'>= {min_ver}'
 
 
