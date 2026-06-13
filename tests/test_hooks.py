@@ -1,4 +1,4 @@
-import os
+import pathlib
 import re
 import zipfile
 
@@ -36,8 +36,5 @@ def test_editable_pth_redirect(tmp_path):
     match = re.fullmatch(
         r'# import redirect (?P<package>[\w.]+) -> (?P<path>.*)', pth_contents.strip()
     )
-    assert match, f'pth contents did not match expected pattern: {pth_contents!r}'
     assert match.group('package') == 'coherent.build'
-    path = match.group('path')
-    assert os.path.isabs(path)
-    assert os.path.isdir(path)
+    assert pathlib.Path(match.group('path')).is_dir()
