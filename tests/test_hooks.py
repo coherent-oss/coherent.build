@@ -23,21 +23,13 @@ def is_redirect_file(name):
     return name.endswith('-redirects.pth')
 
 
-def test_editable_pth_redirect(tmp_path, monkeypatch):
+def test_editable_pth_redirect(tmp_path):
     """
     Ensure that editable wheels include a .pth file with an import redirect
     comment mapping the package name to the source directory.
     """
-    md_root = tmp_path / 'metadata-build'
-    md_root.mkdir()
-    md_name = coherent.build.prepare_metadata_for_build_editable(md_root)
-    md_dir = md_root / md_name
-    wheel_root = tmp_path / 'wheel-build'
-    wheel_root.mkdir()
-    monkeypatch.delattr(coherent.build.metadata.Message, 'discover')
-    wheel_name = coherent.build.build_editable(wheel_root, metadata_directory=md_dir)
-    wheel_path = wheel_root / wheel_name
-    with zipfile.ZipFile(wheel_path) as zf:
+    wheel_name = coherent.build.build_editable(tmp_path)
+    with zipfile.ZipFile(tmp_path / wheel_name) as zf:
         (pth_file,) = filter(is_redirect_file, zf.namelist())
         pth_contents = zf.read(pth_file).decode()
     assert pth_contents.startswith('# import redirect ')
