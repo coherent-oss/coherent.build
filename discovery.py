@@ -166,13 +166,14 @@ def python_requires_supported():
     owner = 'python'
     repo = 'cpython'
     url = f'https://api.github.com/repos/{owner}/{repo}/branches'
+    branches = requests.get(url).json()
+    # cheat and grab the first branch, which is the oldest supported Python version
     try:
-        branches = requests.get(url).json()
-        # cheat and grab the first branch, which is the oldest supported Python version
-        return f'>= {branches[0]["name"]}'
-    except Exception:
-        log.warning("Failed to determine supported Python versions from CPython")
+        min_ver = branches[0]["name"]
+    except KeyError:
+        log.warning(f"Unexpected {branches=}")
         return _python_requires_from_self()
+    return f'>= {min_ver}'
 
 
 def _python_requires_from_self():
