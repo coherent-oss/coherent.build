@@ -4,6 +4,7 @@ import ast
 import contextlib
 import datetime
 import functools
+import importlib.metadata
 import itertools
 import json
 import logging
@@ -165,14 +166,25 @@ def python_requires_supported():
     owner = 'python'
     repo = 'cpython'
     url = f'https://api.github.com/repos/{owner}/{repo}/branches'
-    branches = requests.get(url).json()
-    # cheat and grab the first branch, which is the oldest supported Python version
     try:
-        min_ver = branches[0]["name"]
-    except KeyError:
-        log.warning(f"Unexpected {branches=}")
-        min_ver = "3.8"
-    return f'>= {min_ver}'
+        branches = requests.get(url).json()
+        # cheat and grab the first branch, which is the oldest supported Python version
+        return f'>= {branches[0]["name"]}'
+    except Exception:
+        log.warning("Failed to determine supported Python versions from CPython")
+        return _python_requires_from_self()
+
+
+def _python_requires_from_self():
+    """
+    Infer the minimum Python version from coherent.build's own installed metadata.
+
+    This provides a stable fallback when the GitHub API is unavailable.
+    """
+    try:
+        return importlib.metadata.metadata('coherent.build')['Requires-Python']
+    except Exception:
+        return '>= 3.8'
 
 
 def declared_deps():
