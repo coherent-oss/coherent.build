@@ -90,8 +90,10 @@ def build_editable(wheel_directory, config_settings=None, metadata_directory=Non
     )
     root = metadata['Name'].replace('.', '/')
     filename = pathlib.Path(wheel_directory) / f'{metadata.id}-py3-none-any.whl'
+    pth_name = f"{metadata['Name']}-redirects.pth"
     with WheelFile(filename, 'w') as zf:
         zf.writestr(f'{root}/__init__.py', proxy())
+        zf.writestr(pth_name, pth_redirect(metadata['Name']))
         for name, contents in metadata.render_wheel():
             zf.writestr(f'{metadata.id}.dist-info/{name}', contents)
     return filename.name
@@ -110,3 +112,7 @@ def proxy():
             with strm:
                 exec(compile(strm.read(), __file__, 'exec'))
         """).lstrip()
+
+
+def pth_redirect(package_name):
+    return f'# import redirect {package_name} -> {os.getcwd()}\n'

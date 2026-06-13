@@ -1,3 +1,6 @@
+import os
+import zipfile
+
 import coherent.build.backend
 
 
@@ -14,3 +17,27 @@ def test_prepared_metadata(tmp_path, monkeypatch):
     # ensure Message.discover is not called
     monkeypatch.delattr(coherent.build.metadata.Message, 'discover')
     coherent.build.build_wheel(wheel_root, metadata_directory=md_dir)
+
+
+def test_editable_pth_redirect(tmp_path, monkeypatch):
+    """
+    Ensure that editable wheels include a .pth file with an import redirect
+    comment mapping the package name to the source directory.
+    """
+    md_root = tmp_path / 'metadata-build'
+    md_root.mkdir()
+    md_name = coherent.build.prepare_metadata_for_build_editable(md_root)
+    md_dir = md_root / md_name
+    wheel_root = tmp_path / 'wheel-build'
+    wheel_root.mkdir()
+    monkeypatch.delattr(coherent.build.metadata.Message, 'discover')
+    wheel_name = coherent.build.build_editable(wheel_root, metadata_directory=md_dir)
+    wheel_path = wheel_root / wheel_name
+    with zipfile.ZipFile(wheel_path) as zf:
+        pth_files = [name for name in zf.namelist() if name.endswith('-redirects.pth')]
+        assert len(pth_files) == 1, f"Expected one -redirects.pth file, got: {pth_files}"
+        pth_contents = zf.read(pth_files[0]).decode()
+    assert pth_contents.startswith('# import redirect ')
+    pkg_name = pth_files[0].removesuffix('-redirects.pth')
+    cwd = os.getcwd()
+    assert pth_contents.strip() == f'# import redirect {pkg_name} -> {cwd}'
