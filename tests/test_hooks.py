@@ -32,7 +32,6 @@ def test_editable_pth_redirect(tmp_path):
     with zipfile.ZipFile(tmp_path / wheel_name) as zf:
         (pth_file,) = filter(is_redirect_file, zf.namelist())
         pth_contents = zf.read(pth_file).decode()
-    assert pth_contents.startswith('# import redirect ')
     pkg_name = pth_file.removesuffix('-redirects.pth')
     package_root = os.getcwd()
     assert pth_contents.strip() == f'# import redirect {pkg_name} -> {package_root}'
