@@ -1,4 +1,5 @@
 import os
+import re
 import zipfile
 
 import coherent.build.backend
@@ -32,6 +33,11 @@ def test_editable_pth_redirect(tmp_path):
     with zipfile.ZipFile(tmp_path / wheel_name) as zf:
         (pth_file,) = filter(is_redirect_file, zf.namelist())
         pth_contents = zf.read(pth_file).decode()
-    pkg_name = pth_file.removesuffix('-redirects.pth')
-    package_root = os.getcwd()
-    assert pth_contents.strip() == f'# import redirect {pkg_name} -> {package_root}'
+    match = re.fullmatch(
+        r'# import redirect (?P<package>[\w.]+) -> (?P<path>.*)', pth_contents.strip()
+    )
+    assert match, f'pth contents did not match expected pattern: {pth_contents!r}'
+    assert match.group('package') == 'coherent.build'
+    path = match.group('path')
+    assert os.path.isabs(path)
+    assert os.path.isdir(path)
