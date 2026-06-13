@@ -175,7 +175,7 @@ def _infer_min_py_from_cpython_branches():
     return f'>= {min_ver}'
 
 
-def _fallback_min_py_from_builder():
+def _min_py_from_builder():
     return importlib.metadata.metadata('coherent.build')['Requires-Python']
 
 
@@ -184,7 +184,7 @@ def python_requires_supported():
     >>> python_requires_supported()
     '>= 3...'
     """
-    return _infer_min_py_from_cpython_branches() or _fallback_min_py_from_builder()
+    return _infer_min_py_from_cpython_branches() or _min_py_from_builder()
 
 
 def declared_deps():
