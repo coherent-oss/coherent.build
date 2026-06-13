@@ -4,6 +4,7 @@ import ast
 import contextlib
 import datetime
 import functools
+import importlib.metadata
 import itertools
 import json
 import logging
@@ -157,11 +158,7 @@ def source_url():
     return repo_info().get('url')
 
 
-def python_requires_supported():
-    """
-    >>> python_requires_supported()
-    '>= 3...'
-    """
+def _infer_min_py_from_cpython_branches():
     owner = 'python'
     repo = 'cpython'
     url = f'https://api.github.com/repos/{owner}/{repo}/branches'
@@ -170,9 +167,24 @@ def python_requires_supported():
     try:
         min_ver = branches[0]["name"]
     except KeyError:
-        log.warning(f"Unexpected {branches=}")
-        min_ver = "3.8"
+        log.warning(
+            f"Failed to determine supported Python versions from CPython; "
+            f"Unexpected {branches=}"
+        )
+        return None
     return f'>= {min_ver}'
+
+
+def _min_py_from_builder():
+    return importlib.metadata.metadata('coherent.build')['Requires-Python']
+
+
+def python_requires_supported():
+    """
+    >>> python_requires_supported()
+    '>= 3...'
+    """
+    return _infer_min_py_from_cpython_branches() or _min_py_from_builder()
 
 
 def declared_deps():
