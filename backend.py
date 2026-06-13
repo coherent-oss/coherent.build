@@ -98,10 +98,14 @@ def build_editable(wheel_directory, config_settings=None, metadata_directory=Non
     return filename.name
 
 
+def package_root():
+    return os.getcwd()
+
+
 def proxy():
     return textwrap.dedent(f"""
         import io
-        __path__ = [{os.getcwd()!r}]
+        __path__ = [{package_root()!r}]
         __file__ = __path__[0] + '/__init__.py'
         try:
             strm = io.open_code(__file__)
@@ -114,4 +118,4 @@ def proxy():
 
 
 def pth_redirect(package_name):
-    return f'# import redirect {package_name} -> {os.getcwd()}\n'
+    return f'# import redirect {package_name} -> {package_root()}\n'
