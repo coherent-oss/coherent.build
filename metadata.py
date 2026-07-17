@@ -112,7 +112,8 @@ class Message(email.message.Message):
         yield from discovery.best_description()
         for classifier in discovery.generate_classifiers():
             yield 'Classifier', classifier
-        yield 'License-Expression', discovery.declared_license() or 'Apache-2.0'
+        if license := discovery.declared_license():
+            yield 'License-Expression', license
 
     @classmethod
     @suppress(MetadataNotFound)
@@ -153,8 +154,9 @@ class Message(email.message.Message):
             "dependencies": self.get_all("Requires-Dist") or [],
             "classifiers": self.get_all("Classifier") or [],
             'urls': self.urls,
-            'license': self['License-Expression'],
         }
+        if license := self['License-Expression']:
+            project['license'] = license
 
         return project
 
