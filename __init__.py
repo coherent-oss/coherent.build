@@ -4,6 +4,8 @@ __requires__ = [
     'importlib_resources; python_version < "3.12"',
 ]
 
+__license__ = 'Apache-2.0'
+
 # honor PYTHONSAFEPATH (coherent-oss/system#21)
 import jaraco.compat.py310.safe_path  # noqa: F401
 

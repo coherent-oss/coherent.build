@@ -113,4 +113,5 @@ class SDist(layouts.SDist):
         yield from super().gen_files()
         yield 'pyproject.toml', render(self.metadata)
         yield self.metadata.readme_filename, self.metadata['Description']
-        yield 'LICENSE', coherent.licensed.resolve(self.metadata['License-Expression'])
+        if license := self.metadata['License-Expression']:
+            yield 'LICENSE', coherent.licensed.resolve(license)

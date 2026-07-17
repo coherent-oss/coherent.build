@@ -201,10 +201,10 @@ def declared_license():
 
     Returns None if no ``__license__`` is declared.
 
-    >>> declared_license()
     >>> monkeypatch = getfixture('monkeypatch')
     >>> tmp_path = getfixture('tmp_path')
     >>> monkeypatch.chdir(tmp_path)
+    >>> declared_license()
     >>> _ = (tmp_path / '__init__.py').write_text('__license__ = "MIT"\\n')
     >>> declared_license()
     'MIT'
