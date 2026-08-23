@@ -13,7 +13,6 @@ import operator
 import pathlib
 import re
 import subprocess
-import sys
 import types
 import urllib.parse
 from collections.abc import Mapping
@@ -24,6 +23,7 @@ import jaraco.vcs
 import packaging.requirements
 import requests
 import setuptools_scm
+from jaraco.compat.py310 import safe_path
 from jaraco.context import suppress
 from more_itertools import always_iterable, unique_everseen
 from packaging.version import Version
@@ -341,7 +341,7 @@ def author_from_vcs():
     >>> author_from_vcs()
     'Jason R. Coombs <jaraco@jaraco.com>'
     """
-    cmd = [sys.executable, '-m', 'gitfame', '--format', 'json', '--show', 'name,email']
+    cmd = safe_path.command('-m', 'gitfame', '--format', 'json', '--show', 'name,email')
     contribs = _to_objects(
         json.loads(
             subprocess.check_output(
@@ -349,6 +349,7 @@ def author_from_vcs():
                 text=True,
                 encoding='utf-8',
                 stderr=subprocess.DEVNULL,
+                env=safe_path.environ(),
             )
         )
     )
