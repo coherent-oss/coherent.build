@@ -4,6 +4,7 @@ import pathlib
 import re
 import tarfile
 import time
+from typing import ClassVar
 
 from .metadata import Message
 
@@ -75,7 +76,11 @@ class SDist(Layout):
     namespace(name='foo/distributions')
     """
 
-    ignored = ['dist$', r'(.*[/])?__pycache__$', r'(.*[/])?[.]']
+    ignored: ClassVar[list[str]] = [
+        'dist$',
+        r'(.*[/])?__pycache__$',
+        r'(.*[/])?[.]',
+    ]
 
     def prefix(self, name):
         return self.metadata.id
@@ -112,7 +117,7 @@ class Wheel(Layout):
     >>> wf(types.SimpleNamespace(name='./pyproject.toml'))
     """
 
-    ignored = SDist.ignored + [
+    ignored: ClassVar[list[str]] = SDist.ignored + [
         'docs',
         'tests',
         r'README.*',

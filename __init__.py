@@ -22,9 +22,9 @@ prepare_metadata_for_build_wheel = prepare_metadata_for_build_editable = (
 
 
 __all__ = [
-    'build_sdist',
-    'prepare_metadata_for_build_wheel',
-    'prepare_metadata_for_build_editable',
-    'build_wheel',
     'build_editable',
+    'build_sdist',
+    'build_wheel',
+    'prepare_metadata_for_build_editable',
+    'prepare_metadata_for_build_wheel',
 ]
