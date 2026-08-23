@@ -1,6 +1,8 @@
 __requires__ = [
     'build',
     'git-fame',
+    # for safe_path.command (#69)
+    'jaraco.compat >= 4.4',
     'importlib_resources; python_version < "3.12"',
 ]
 
