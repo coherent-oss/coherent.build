@@ -213,6 +213,45 @@ def declared_license():
     return reader._read('__license__')
 
 
+@suppress(FileNotFoundError, ValueError)
+def _declared_typed():
+    """
+    Read the ``__typed__`` declaration from ``__init__.py``.
+
+    Returns None if no ``__typed__`` is declared.
+    """
+    reader = scripts.SourceDepsReader.load(pathlib.Path('__init__.py'))
+    return reader._read('__typed__')
+
+
+def is_typed():
+    """
+    Is this package typed (PEP 561)?
+
+    Coherent packages are written with inline annotations, so a package
+    is presumed typed unless it declares ``__typed__ = False``.
+
+    >>> monkeypatch = getfixture('monkeypatch')
+    >>> tmp_path = getfixture('tmp_path')
+    >>> monkeypatch.chdir(tmp_path)
+
+    Absent any declaration (or any ``__init__.py``), presume typed.
+
+    >>> is_typed()
+    True
+    >>> _ = (tmp_path / '__init__.py').write_text('__version__ = "1.0"\\n')
+    >>> is_typed()
+    True
+
+    A package may opt out.
+
+    >>> _ = (tmp_path / '__init__.py').write_text('__typed__ = False\\n')
+    >>> is_typed()
+    False
+    """
+    return _declared_typed() is not False
+
+
 def source_files():
     """
     Return all files in the source distribution.

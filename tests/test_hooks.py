@@ -3,6 +3,7 @@ import re
 import zipfile
 
 import coherent.build.backend
+import coherent.build.discovery
 
 
 def test_prepared_metadata(tmp_path, monkeypatch):
@@ -38,3 +39,34 @@ def test_editable_pth_redirect(tmp_path):
     )
     assert match.group('package') == 'coherent.build'
     assert pathlib.Path(match.group('path')).is_dir()
+
+
+def test_wheel_includes_py_typed(tmp_path):
+    """
+    Wheels carry a PEP 561 marker in the leaf package, and nowhere else.
+    """
+    wheel_name = coherent.build.build_wheel(tmp_path)
+    with zipfile.ZipFile(tmp_path / wheel_name) as zf:
+        names = zf.namelist()
+    assert 'coherent/build/py.typed' in names
+    assert 'coherent/py.typed' not in names
+
+
+def test_py_typed_opt_out(tmp_path, monkeypatch):
+    """
+    A package declaring itself untyped gets no marker.
+    """
+    monkeypatch.setattr(coherent.build.discovery, 'is_typed', lambda: False)
+    wheel_name = coherent.build.build_wheel(tmp_path)
+    with zipfile.ZipFile(tmp_path / wheel_name) as zf:
+        assert not any(name.endswith('py.typed') for name in zf.namelist())
+
+
+def test_editable_omits_py_typed(tmp_path):
+    """
+    Editable wheels omit the marker; it would vouch for the proxy module,
+    which exports nothing (coherent-oss/coherent.build#72).
+    """
+    wheel_name = coherent.build.build_editable(tmp_path)
+    with zipfile.ZipFile(tmp_path / wheel_name) as zf:
+        assert not any(name.endswith('py.typed') for name in zf.namelist())
