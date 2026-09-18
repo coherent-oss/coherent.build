@@ -110,10 +110,6 @@ def build_editable(wheel_directory, config_settings=None, metadata_directory=Non
     )
     root = metadata['Name'].replace('.', '/')
     filename = pathlib.Path(wheel_directory) / f'{metadata.id}-py3-none-any.whl'
-    # Deliberately no py.typed marker here. Type checkers resolve the marker
-    # statically, relative to the install location, and never follow the
-    # runtime __path__ redirect, so a marker would vouch for the proxy below,
-    # which exports nothing (coherent-oss/coherent.build#72).
     with WheelFile(filename, 'w') as zf:
         zf.writestr(f'{root}/__init__.py', proxy())
         zf.writestr(f"{metadata['Name']}-redirects.pth", pth_redirect(metadata['Name']))
