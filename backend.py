@@ -13,7 +13,7 @@ from jaraco.functools import pass_none
 from more_itertools import consume
 from wheel.wheelfile import WheelFile
 
-from . import flit, layouts
+from . import discovery, flit, layouts
 from .metadata import Message
 
 
@@ -58,12 +58,32 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
         or Message.discover()
     )
     filename = pathlib.Path(wheel_directory) / f'{metadata.id}-py3-none-any.whl'
+    layout = layouts.Wheel(metadata)
     with WheelFile(filename, 'w') as zf:
-        for info in wheel_walk(layouts.Wheel(metadata)):
+        for info in wheel_walk(layout):
             zf.write(info.path, arcname=info.name)
+        for name, contents in py_typed(layout):
+            zf.writestr(name, contents)
         for name, contents in metadata.render_wheel():
             zf.writestr(f'{metadata.id}.dist-info/{name}', contents)
     return filename.name
+
+
+def py_typed(layout: layouts.Wheel) -> Iterator[tuple[str, str]]:
+    """
+    Generate the PEP 561 marker for the distributed package.
+
+    The marker lands in the leaf package (e.g. ``coherent/build/py.typed``)
+    and never at a namespace root, where it would assert that every sibling
+    distribution in the namespace is typed as well.
+
+    Yields nothing when the project already supplies its own marker or
+    declares itself untyped.
+    """
+    marker = 'py.typed'
+    if pathlib.Path(marker).exists() or not discovery.is_typed():
+        return
+    yield posixpath.join(layout.prefix(marker), marker), ''
 
 
 sdist_backends = dict(
@@ -90,6 +110,10 @@ def build_editable(wheel_directory, config_settings=None, metadata_directory=Non
     )
     root = metadata['Name'].replace('.', '/')
     filename = pathlib.Path(wheel_directory) / f'{metadata.id}-py3-none-any.whl'
+    # Deliberately no py.typed marker here. Type checkers resolve the marker
+    # statically, relative to the install location, and never follow the
+    # runtime __path__ redirect, so a marker would vouch for the proxy below,
+    # which exports nothing (coherent-oss/coherent.build#72).
     with WheelFile(filename, 'w') as zf:
         zf.writestr(f'{root}/__init__.py', proxy())
         zf.writestr(f"{metadata['Name']}-redirects.pth", pth_redirect(metadata['Name']))
