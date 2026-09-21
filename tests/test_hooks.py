@@ -1,5 +1,6 @@
 import pathlib
 import re
+import tarfile
 import zipfile
 
 import coherent.build.backend
@@ -70,3 +71,17 @@ def test_editable_omits_py_typed(tmp_path):
     wheel_name = coherent.build.build_editable(tmp_path)
     with zipfile.ZipFile(tmp_path / wheel_name) as zf:
         assert not any(name.endswith('py.typed') for name in zf.namelist())
+
+
+def test_sdist_includes_py_typed(tmp_path):
+    """
+    The sdist carries the marker too. Its pyproject declares flit_core as
+    the backend, so coherent.build never sees the wheel built from it
+    downstream; the marker has to be in the source tree flit copies.
+    """
+    sdist_name = coherent.build.build_sdist(tmp_path)
+    with tarfile.open(tmp_path / sdist_name) as tf:
+        names = tf.getnames()
+    root = sdist_name.removesuffix('.tar.gz')
+    assert f'{root}/coherent/build/py.typed' in names
+    assert f'{root}/coherent/py.typed' not in names

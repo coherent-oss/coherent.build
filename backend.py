@@ -81,7 +81,7 @@ def py_typed(layout: layouts.Wheel) -> Iterator[tuple[str, str]]:
     declares itself untyped.
     """
     marker = 'py.typed'
-    if pathlib.Path(marker).exists() or not discovery.is_typed():
+    if not discovery.emits_py_typed():
         return
     yield posixpath.join(layout.prefix(marker), marker), ''
 

@@ -7,7 +7,7 @@ import jaraco.functools
 import tomlkit
 from jaraco.context import suppress
 
-from . import layouts, metadata
+from . import discovery, layouts, metadata
 from .discovery import none_as
 
 unique = dict.fromkeys
@@ -111,6 +111,8 @@ class SDist(layouts.SDist):
 
     def gen_files(self):
         yield from super().gen_files()
+        if discovery.emits_py_typed():
+            yield 'py.typed', ''
         yield 'pyproject.toml', render(self.metadata)
         yield self.metadata.readme_filename, self.metadata['Description']
         if license := self.metadata['License-Expression']:

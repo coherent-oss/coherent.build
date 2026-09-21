@@ -252,6 +252,29 @@ def is_typed():
     return _declared_typed() is not False
 
 
+def emits_py_typed():
+    """
+    Should the build supply a PEP 561 marker?
+
+    False when the project already ships its own marker (no duplicate)
+    or declares itself untyped.
+
+    >>> monkeypatch = getfixture('monkeypatch')
+    >>> tmp_path = getfixture('tmp_path')
+    >>> monkeypatch.chdir(tmp_path)
+
+    >>> emits_py_typed()
+    True
+
+    A marker in the project takes precedence.
+
+    >>> _ = (tmp_path / 'py.typed').write_text('')
+    >>> emits_py_typed()
+    False
+    """
+    return not pathlib.Path('py.typed').exists() and is_typed()
+
+
 def source_files():
     """
     Return all files in the source distribution.
