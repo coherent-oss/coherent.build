@@ -95,6 +95,15 @@ class SDist(layouts.SDist):
 
     >>> files['LICENSE']
     'Apache License...'
+
+    Names are POSIX on every platform; they become tar members, and a
+    native path would render the package separators as backslashes on
+    Windows (#76).
+
+    >>> sf.prefix('py.typed')
+    PurePosixPath('foo-1.0/foo')
+    >>> sf.prefix('LICENSE')
+    PurePosixPath('foo-1.0')
     """
 
     ignored = layouts.SDist.ignored + [
@@ -106,8 +115,8 @@ class SDist(layouts.SDist):
         package = self.metadata['Name'].replace('.', '/')
         root_pattern = '|'.join(layouts.Wheel.ignored + ['LICENSE'])
         if re.match(root_pattern, name):
-            return pathlib.PurePath(self.metadata.id)
-        return pathlib.PurePath(self.metadata.id, package)
+            return pathlib.PurePosixPath(self.metadata.id)
+        return pathlib.PurePosixPath(self.metadata.id, package)
 
     def gen_files(self):
         yield from super().gen_files()
